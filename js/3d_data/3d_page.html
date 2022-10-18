@@ -1,0 +1,1944 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Terrain</title>
+<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+<link rel="stylesheet" type="text/css" href="./Qgis2threejs.css">
+<link rel="stylesheet" type="text/css" href="../../codebase/dhtmlx.css">
+</head>
+<body onLoad="onLoad()">
+<div id="webgl"></div>
+<script src="./threejs/three.min.js"></script>
+<script src="./lib/stats.min.js"></script>
+<script src="./threejs/OrbitControls.js"></script>
+<script src="./threejs/EventsControls.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="../../codebase/dhtmlx.js"></script>
+<script>
+	/*******/
+	//var uriBase = "https://data.geodac.tw/geoinfo_api/api/geodac/gis/demquery?xmin=120.982025&xmax=121.082025&ymin=23.573875&ymax=23.973875&xdim=20&ydim=20&resolution=20m";	
+	var php_list;
+	var php_list_test;
+	
+	//php info >> list
+	var longitude = new Array();
+	var latitude = new Array();
+	var terr_height = new Array();
+	var terr_height_new = new Array();
+	
+	var terr_height_new_1 = new Array();
+	var newArr = new Array();
+	var arr_h, arr_h_new;
+	var nArr = new Array();
+	var nArr_new = new Array();
+	
+	var terr_info = new Array();//include longitude, latitude and height
+	
+	var wf_on = 0;//first off
+	var side_on = 1;
+	
+	var ha;
+	var cy_loc_temp;
+	
+	var xy_val = new Array();
+	
+	var _left, _right, _up, _down;
+	
+	var tooltipEnabledObjects_drillhole = [];
+	var tooltipEnabledObjects_earthquake = [];
+	
+	//mouse event
+	var mouse = new THREE.Vector2();
+	var latestMouseProjection;
+	var hoveredObj;
+	var tooltipDisplayTimeout;
+	
+	var done = 0;
+	var z_rate = 1.0;
+	
+	var world = {};
+	var lyr = [], mat = [], tex = [], jsons=[], labels=[], queryableObjs = [];
+	
+	var earthquake_info = new Array();
+	var earthquake_center_height = new Array();
+	var find_center_height = 0;
+
+// 	var earthquake_info = 
+// //	[[[0],["2019/10/15 23:50"],[120.73],[23.44],[-5],[3.3],["嘉義縣政府東方 44.8 公里 (位於嘉義縣阿里山鄉)"]],
+// //	[[1],["2019/07/19 00:30"],[120.38],[23.43],[-15],[3.7],["嘉義縣政府東偏南方 8.9 公里 (位於嘉義縣水上鄉)"]],
+// //	[[2],["2018/02/06 23:50"],[121.73],[24.10],[-25],[6.2],["花蓮縣政府東北方 16.5 公里 (位於臺灣東部海域)"]]
+// //	];
+// 	[
+// 		[[0],["109年5月20日 0時50分49秒"],[120.52],[23.12],[-9.1],[4],["臺南市政府東偏北方 36.6 公里 (位於臺南市南化區)"]],
+// 		[[1],["109年5月18日 6時53分30秒"],[121.71],[24.02],[-29.3],[4.4],["花蓮縣政府東偏北方 9.9 公里 (位於花蓮縣近海)"]],
+// 		[[2],["109年5月14日 22時57分35秒"],[121.64],[23.82],[-36.5],[4.1],["花蓮縣政府南方 19.1 公里 (位於花蓮縣近海)"]],
+// 		[[3],["109年5月11日 20時35分7秒"],[120.75],[23.65],[-14.9],[3.5],["南投縣政府南偏東方 29.1 公里 (位於南投縣竹山鎮)"]],
+// 		[[4],["109年5月11日 20時32分52秒"],[120.76],[23.65],[-13.9],[3.8],["南投縣政府南偏東方 29.1 公里 (位於南投縣竹山鎮)"]],
+// 		[[5],["109年5月9日 16時51分9秒"],[121.3],[23.13],[-14.2],[3.8],["花蓮縣政府南偏西方 100.7 公里 (位於花蓮縣富里鄉)"]],
+// 		[[6],["109年5月9日 13時45分16秒"],[121.71],[23.83],[-44.9],[4.5],["花蓮縣政府南偏東方 19.5 公里 (位於臺灣東部海域)"]],
+// 		[[7],["109年5月6日 21時0分33秒"],[121.67],[24.16],[-14.1],[3.9],["花蓮縣政府北偏東方 20.0 公里 (位於花蓮縣近海)"]],
+// 		[[8],["109年5月6日 11時25分8秒"],[121.67],[23.97],[-41.6],[3.9],["花蓮縣政府東偏南方 5.2 公里 (位於花蓮縣近海)"]],
+// 		[[9],["109年5月3日 11時24分40秒"],[121.61],[23.23],[-40.4],[5.9],["臺東縣政府東北方 70.7 公里 (位於臺灣東部海域)"]],
+// 		[[10],["109年5月1日 14時23分52秒"],[121.83],[24.41],[-14.5],[3.5],["宜蘭縣政府南偏東方 35.8 公里 (位於宜蘭縣近海)"]]
+// 	];
+
+	// console.log(earthquake_info)
+
+	var drillhole_info = [
+	[["<<模擬資料：麻竹坑地滑地區擴充調查暨自動化觀測計畫>><br>鑽孔地點：麻竹坑<br>鑽孔編號：BH-07<br>總深度：30公尺<br>深度：0-20公尺<br><img src=\"BH-07_1.jpeg\">"],[120.864],[24.22],[-8],[20]],
+	[["<<模擬資料：麻竹坑地滑地區擴充調查暨自動化觀測計畫>><br>鑽孔地點：麻竹坑<br>鑽孔編號：BH-07<br>總深度：30公尺<br>深度：20-40公尺<br><img src=\"BH-07_2.jpeg\">"],[120.864],[24.22],[-28],[20]]
+	];
+
+	
+
+	//img_url;
+	/*******/
+	function onLoad() {
+		//191029
+		/////////////
+		var val = localStorage.getItem("storageName");
+		xy_val = val.split("/");
+		console.log(xy_val[0]);
+		console.log(xy_val[1]);
+		console.log(xy_val[2]);
+		console.log(xy_val[3]);
+
+		$.ajax({
+			type:"GET",
+			// dataType: "json",
+			url:"3d_page.php",
+			data:{
+				x1:xy_val[1],
+				x2:xy_val[0],
+				y1:xy_val[2],
+				y2:xy_val[3],
+			},
+			success: function(response){
+				// console.log('get php_list_test');
+				// console.log(response.toString());
+				php_list_test = response.toString();
+			},
+			error: function(jqXHR) {
+				alert("error " + jqXHR.status);
+			}
+		});
+
+
+
+
+		// load_php_data();
+		// load_test();
+
+		$.ajax({
+			type:"GET",
+			dataType: "json",
+			url:"../../php/earthquake.php",
+			data:{
+				earthquake_date_from:"2000-01-01",
+				earthquake_date_to:"2020-08-01",
+				Search_earthquake_In_drawbox_LU_X:xy_val[1],
+				Search_earthquake_In_drawbox_LU_Y:xy_val[3],
+				Search_earthquake_In_drawbox_RD_X:xy_val[0],
+				Search_earthquake_In_drawbox_RD_Y:xy_val[2],
+				depth_L : 0,
+				depth_H : 720,
+				mag_L : 0,
+				mag_h : 10,
+				earthquake_opt : 4
+			},
+			success: function(response){
+				if(response.length == 0){
+					console.log('no earthquake data!')
+				}
+				else{
+					console.log(response);
+					for(let i=0; i < response.length; ++i){
+						let earthquake_response = new Array();
+						earthquake_response.push([i]);
+						earthquake_response.push([response[i]['earthq_time'].toString()]);
+						earthquake_response.push([parseFloat(response[i]['pos_lon'])]);
+						earthquake_response.push([parseFloat(response[i]['pos_lat'])]);
+						earthquake_response.push([-1 * parseFloat(response[i]['earthq_depth'])]);
+						earthquake_response.push([parseFloat(response[i]['earthq_scale'])]);
+						earthquake_response.push([response[i]['pos_desc'].toString()]);
+						earthquake_info.push(earthquake_response)
+					}
+
+					for(let i=0;i<earthquake_info.length;i++){
+						// console.log('earth quake info')
+						// console.log(earthquake_info[i][4])
+						if(parseFloat(earthquake_info[i][5]) < 5.5){
+							color_earth = 0x2b6935;
+						}
+						else if(parseFloat(earthquake_info[i][5]) < 6){
+							color_earth=0xe5e043;
+						}
+						else{
+							color_earth=0xea480b;
+						}
+						sphereGeometry_1[i] = new THREE.SphereGeometry(earthquake_info[i][5]*1.5, 20, 20);
+						sphereMaterial_1[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.4} );
+						sphere_1[i] = new THREE.Mesh(sphereGeometry_1[i], sphereMaterial_1[i]);
+
+						// sphereGeometry_2[i] = new THREE.SphereGeometry(2*earthquake_info[i][4]/3, 20, 20);
+						// sphereMaterial_2[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.35} );
+						// sphere_2[i] = new THREE.Mesh(sphereGeometry_2[i], sphereMaterial_2[i]);
+
+						// sphereGeometry_3[i] = new THREE.SphereGeometry(earthquake_info[i][4], 20, 20);
+						// sphereMaterial_3[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.15} );
+						// sphere_3[i] = new THREE.Mesh(sphereGeometry_3[i], sphereMaterial_3[i]);
+
+						material_line[i] = new THREE.LineBasicMaterial({color:color_earth});
+						geometry_line[i] = new THREE.Geometry();
+						line[i] = new THREE.Line(geometry_line[i], material_line[i]);
+					}
+				}
+			},
+			error: function(jqXHR) {
+				alert("error " + jqXHR.status);
+			}
+		});
+
+		console.log(earthquake_info)
+
+	
+		document.getElementById("Cursor_Coord").innerHTML = "目前位置未取得坐標資訊";
+		document.getElementById("url_btn").onclick = clk_url;
+		document.getElementById("model_btn").onclick = clk_model;
+		document.getElementById("infobtn").onclick = showInfo;
+		document.getElementById("wf_btn").onclick = click_wf_btn;
+		document.getElementById("side_btn").onclick = click_side_btn;
+		document.getElementById("closebtn").onclick = closeClicked;	
+		
+		if ("hidebutton" in vars) document.getElementById("infobtn").style.display = "none";
+		
+		var img_url = localStorage.getItem("resize");
+		var show_type = localStorage.getItem("show_type");
+		
+		_left = localStorage.getItem("_left");
+		_right = localStorage.getItem("_right");
+		_up = localStorage.getItem("_up");
+		_down = localStorage.getItem("_down");
+		
+		console.log(show_type);
+
+		console.log(_left);
+		console.log(_right);
+		console.log(_up);
+		console.log(_down);
+		
+		
+		document.getElementById("floatingCirclesG").style.display = "";
+		document.getElementById("model_btn").style.display = "none";
+		document.getElementById("url_btn").style.display = "none";
+		document.getElementById("wf_btn").style.display = "none";
+		document.getElementById("side_btn").style.display = "none";
+		
+		document.getElementById("myRange").disabled = true;
+		
+		slider = document.getElementById("myRange");
+		
+		console.log("onload");
+		done = 1;
+		//create_win();
+		create_menu();
+		setTimeout(function(){
+				//
+			document.getElementById("url_btn").click();
+			document.getElementById("model_btn").click();
+			document.getElementById("floatingCirclesG").style.display = "none";
+			document.getElementById("wall_data_button").onclick = wall_data_clk;
+			document.getElementById("earthquake_data_button").onclick = earthquake_data_clk;
+			
+			//191008
+			document.getElementById("side_button").onclick = click_side_btn;
+			document.getElementById("wireframe_button").onclick = click_wf_btn;
+			
+			//localStorage.clear(); //
+		}, 5000);  
+	}
+	
+	var geometry_plane;
+	
+	setTimeout(function(){
+	var slider = document.getElementById("myRange");
+		slider.oninput = function() {
+			z_rate = this.value;
+			var j = 0;
+			var m = geometry_plane.vertices.length;
+			while(j < m){
+				geometry_plane.vertices[j].z = arr_h[j]*z_rate;
+				j++;
+			}
+			geometry_plane.dynamic = true;
+			geometry_plane.computeFaceNormals();
+			geometry_plane.computeVertexNormals();
+			geometry_plane.normalsNeedUpdate = true;
+			geometry_plane.verticesNeedUpdate = true;
+			document.getElementById("val_z").innerHTML = "高度倍率：" + z_rate;
+			//geometry_plane.log(z_rate);
+		}
+	}, 7000); 
+	
+	var wall_on = 0; //0:off,1:on
+	localStorage.setItem("wall_data_storage",wall_on);
+	function wall_data_clk(){
+		if(wall_on == 0){
+			console.log("drill_on");
+			document.getElementById("wall_data_button").innerText = "關閉鑽探資料";
+			wall_on = 1;
+			localStorage.setItem("wall_data_storage",wall_on);
+
+			var c;
+			for(c=0;c<drillhole_info.length;c++)
+			{
+				build_other_obj(c);
+			}
+			
+		}
+		else{
+			document.getElementById("wall_data_button").innerText = "開啟鑽探資料";
+			wall_on = 0;
+			localStorage.setItem("wall_data_storage",wall_on);
+			var c;
+			for(c=0;c<drillhole_info.length;c++)
+			{
+				clear_other_obj(c);
+			}
+		}
+		
+	}
+	
+	var earthquake_on = 0;
+	localStorage.setItem("earthquake_data_storage",earthquake_on);
+	function earthquake_data_clk(){
+		if(earthquake_on == 0){
+			console.log("earth_on");
+			document.getElementById("earthquake_data_button").innerText = "關閉地震資料";
+			earthquake_on = 1;
+			localStorage.setItem("earthquake_data_storage",earthquake_on);
+
+			for(var c=0;c<earthquake_info.length;c++)
+			{
+				bulid_epicenter_obj_test(c);
+			}	
+		}
+		else{
+			document.getElementById("earthquake_data_button").innerText = "開啟地震資料";
+			earthquake_on = 0;
+			localStorage.setItem("earthquake_data_storage",earthquake_on);
+			for(var c=0;c<earthquake_info.length;c++)
+			{
+				clear_epicenter_obj_test(c);
+			}
+		}
+	}
+	
+	//190923
+	function create_menu(){
+		var w = $("#menu_slider_content").width();
+		h = $(window).height();
+		h = h-105;
+		$('#menu_slider_content').css('height',h+'px');
+		//$('#menu_slider_content_in').css('height', h + 'px');
+		$("#menu_tab").click(function () {
+			//conslog.log("test");
+			if ($("#menu_slider_scroll").css('right') == ("-" + w + 'px')){
+				$("#menu_slider_scroll").animate({ right: '0px' }, 600, 'swing');
+				document.getElementById("menu_tab").innerHTML = ' <span>►</span><span>輔</span><span>助</span><span>選</span><span>單</span>';                      
+				//$("#R_mean_alert_content").show();
+			}
+			else {
+				$("#menu_slider_scroll").animate({ right: '-' + w + 'px' }, 600, 'swing');
+				document.getElementById("menu_tab").innerHTML = '<span>◄</span><span>輔</span><span>助</span><span>選</span><span>單</span>';
+				//$("#R_mean_alert_content").hide();
+			}
+        });	
+		
+	}
+	/////////////////////////////
+	
+	function nouse(){
+		console.log("debug");
+	}
+	
+	function showInfo() {
+		//var str = (typeof controlHelp === "undefined") ? "INFO：" : "震源位置：xxx <br>";
+		//str += "震源深度：xxx <br>";
+		//document.getElementById("info").innerHTML = str;
+		//var help = (typeof controlHelp === "undefined") ? "* Keys" : controlHelp.split("\n").join("<br>");
+		var help = "↑ ↓ ← →：水平移動模型<br>Shift + s：擷取畫面<br>Shift + ↑ ↓ ← →：移動視角<br>Ctrl + ↑ ↓ ← →：旋轉模型<br>Shift + Ctrl + ↑ ↓： 放大(縮小)<br>R：自動旋轉(on/off)<br>U：水平翻轉模型<br>"
+		document.getElementById("usage").innerHTML = help;
+		
+		document.getElementById("pageinfo").style.display = "block";
+		document.getElementById("queryresult").style.display = "none";
+		document.getElementById("popup").style.display = "block";
+	}
+
+	function closeClicked() {
+		document.getElementById("popup").style.display = "none";
+		queryMarker.visible = false;
+	}
+	
+	function empty(elem) {
+		while (elem.lastChild) elem.removeChild(elem.lastChild);
+	}
+	
+	localStorage.setItem("wf_storage",wf_on);
+	function click_wf_btn(){
+		//var el = document.getElementById(wf_btn);
+		if(wf_on == 0){
+			wf_on = 1;
+			localStorage.setItem("wf_storage",wf_on);
+			document.getElementById("wireframe_button").innerText = "關閉網格";//change text:innerText!
+			scene.remove(plane);
+			build_plane(scene);
+			render();
+		}
+		else if(wf_on == 1){
+			wf_on = 0;
+			localStorage.setItem("wf_storage",wf_on);
+			document.getElementById("wireframe_button").innerText = "開啟網格";//change text:innerText!
+			scene.remove(plane);
+			build_plane(scene);
+			render();
+
+		}
+	}
+	
+	localStorage.setItem("side_storage",side_on);
+	function click_side_btn(){
+		if(side_on == 0){
+			side_on = 1;
+			localStorage.setItem("side_storage",side_on);
+			document.getElementById("side_button").innerText = "關閉底座";//change text:innerText!
+			scene.add(plane_bottom);
+			scene.add(mesh_1);
+			scene.add(mesh_2);
+			scene.add(mesh_3);
+			scene.add(mesh_4);
+			document.getElementById("myRange").disabled = true;
+			document.getElementById("myRange").value = 1.0;
+			z_rate = 1.0;
+			var j = 0;
+			var m = geometry_plane.vertices.length;
+			while(j < m){
+				geometry_plane.vertices[j].z = arr_h[j]*z_rate;
+				j++;
+			}
+			geometry_plane.dynamic = true;
+			geometry_plane.computeFaceNormals();
+			geometry_plane.computeVertexNormals();
+			geometry_plane.normalsNeedUpdate = true;
+			geometry_plane.verticesNeedUpdate = true;
+			document.getElementById("val_z").innerHTML = "高度倍率：" + z_rate;
+			/////////
+		}
+		else if(side_on == 1){
+			side_on = 0;
+			localStorage.setItem("side_storage",side_on);
+			document.getElementById("side_button").innerText = "開啟底座";
+			scene.remove(plane_bottom);
+			scene.remove(mesh_1);
+			scene.remove(mesh_2);
+			scene.remove(mesh_3);
+			scene.remove(mesh_4);
+			document.getElementById("myRange").disabled = false;
+			/////////
+		}
+	}
+
+	function reqListener () {
+      console.log(this.responseText);
+    }
+	
+	function load_php_data(){
+		var oReq = new XMLHttpRequest(); //New request object
+		oReq.onload = function() {
+			php_list = this.responseText;
+		};
+		oReq.open("get", "3d_page.php", true);
+		//oReq.open("get", "https://140.116.228.144/model_dev/LLGIS_20190220_layer_add_3D/js/3d_data", true);
+		oReq.send();
+	}
+	
+	//////////////////////// new!
+	function load_test(){
+		var oReq = new XMLHttpRequest(); //New request object
+		oReq.onload = function() {
+			//alert(this.responseText);
+			php_list_test = this.responseText;
+			// console.log('php_list_test')
+			// console.log(php_list_test)
+			//console.log(typeof php_list);
+		};
+		oReq.open("get", "return_data.php", true);
+		//oReq.open("get", "https://140.116.228.144/model_dev/LLGIS_20190220_layer_add_3D/js/3d_data", true);
+		oReq.send();
+	}
+	///////////////////////
+	function isInteger(obj) {
+		return parseInt(obj, 10) === obj
+	}
+	
+	function clk_url(){	
+		//$('.text').text(JSON.stringify("123"));
+		console.log("***");
+		//console.log(php_list);
+		//php_list='"{\"type\": \"FeatureCollection\", \"features\": [{\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 22.9894838859706, 1689]}, \"properties\": {\"elevation\": 1689}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 22.9971359672091, 1354]}, \"properties\": {\"elevation\": 1354}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0047880484477, 1266]}, \"properties\": {\"elevation\": 1266}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0124401296862, 1162]}, \"properties\": {\"elevation\": 1162}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0200922109247, 952]}, \"properties\": {\"elevation\": 952}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0277442921633, 703]}, \"properties\": {\"elevation\": 703}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0353963734018, 1030]}, \"properties\": {\"elevation\": 1030}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0430484546403, 1265]}, \"properties\": {\"elevation\": 1265}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0507005358789, 1146]}, \"properties\": {\"elevation\": 1146}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0583526171174, 963]}, \"properties\": {\"elevation\": 963}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0660046983559, 950]}, \"properties\": {\"elevation\": 950}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0736567795945, 1315]}, \"properties\": {\"elevation\": 1315}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.081308860833, 994]}, \"properties\": {\"elevation\": 994}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0889609420715, 729]}, \"properties\": {\"elevation\": 729}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.0966130233101, 460]}, \"properties\": {\"elevation\": 460}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.1042651045486, 514]}, \"properties\": {\"elevation\": 514}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.1119171857871, 469]}, \"properties\": {\"elevation\": 469}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.1195692670257, 528]}, \"properties\": {\"elevation\": 528}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.1272213482642, 565]}, \"properties\": {\"elevation\": 565}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.708727275465, 23.1348734295027, 749]}, \"properties\": {\"elevation\": 749}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 22.9894838859706, 1281]}, \"properties\": {\"elevation\": 1281}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 22.9971359672091, 978]}, \"properties\": {\"elevation\": 978}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0047880484477, 921]}, \"properties\": {\"elevation\": 921}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0124401296862, 668]}, \"properties\": {\"elevation\": 668}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0200922109247, 637]}, \"properties\": {\"elevation\": 637}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0277442921633, 1091]}, \"properties\": {\"elevation\": 1091}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0353963734018, 1304]}, \"properties\": {\"elevation\": 1304}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0430484546403, 1086]}, \"properties\": {\"elevation\": 1086}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0507005358789, 873]}, \"properties\": {\"elevation\": 873}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0583526171174, 777]}, \"properties\": {\"elevation\": 777}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0660046983559, 834]}, \"properties\": {\"elevation\": 834}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0736567795945, 811]}, \"properties\": {\"elevation\": 811}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.081308860833, 580]}, \"properties\": {\"elevation\": 580}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0889609420715, 493]}, \"properties\": {\"elevation\": 493}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.0966130233101, 598]}, \"properties\": {\"elevation\": 598}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.1042651045486, 384]}, \"properties\": {\"elevation\": 384}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.1119171857871, 379]}, \"properties\": {\"elevation\": 379}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.1195692670257, 593]}, \"properties\": {\"elevation\": 593}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.1272213482642, 826]}, \"properties\": {\"elevation\": 826}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.699972545241, 23.1348734295027, 898]}, \"properties\": {\"elevation\": 898}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 22.9894838859706, 793]}, \"properties\": {\"elevation\": 793}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 22.9971359672091, 969]}, \"properties\": {\"elevation\": 969}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0047880484477, 693]}, \"properties\": {\"elevation\": 693}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0124401296862, 544]}, \"properties\": {\"elevation\": 544}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0200922109247, 907]}, \"properties\": {\"elevation\": 907}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0277442921633, 776]}, \"properties\": {\"elevation\": 776}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0353963734018, 1095]}, \"properties\": {\"elevation\": 1095}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0430484546403, 997]}, \"properties\": {\"elevation\": 997}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0507005358789, 575]}, \"properties\": {\"elevation\": 575}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0583526171174, 757]}, \"properties\": {\"elevation\": 757}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0660046983559, 686]}, \"properties\": {\"elevation\": 686}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0736567795945, 465]}, \"properties\": {\"elevation\": 465}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.081308860833, 358]}, \"properties\": {\"elevation\": 358}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0889609420715, 353]}, \"properties\": {\"elevation\": 353}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.0966130233101, 397]}, \"properties\": {\"elevation\": 397}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.1042651045486, 441]}, \"properties\": {\"elevation\": 441}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.1119171857871, 514]}, \"properties\": {\"elevation\": 514}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.1195692670257, 848]}, \"properties\": {\"elevation\": 848}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.1272213482642, 1048]}, \"properties\": {\"elevation\": 1048}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.691217815016, 23.1348734295027, 863]}, \"properties\": {\"elevation\": 863}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 22.9894838859706, 840]}, \"properties\": {\"elevation\": 840}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 22.9971359672091, 521]}, \"properties\": {\"elevation\": 521}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0047880484477, 551]}, \"properties\": {\"elevation\": 551}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0124401296862, 762]}, \"properties\": {\"elevation\": 762}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0200922109247, 500]}, \"properties\": {\"elevation\": 500}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0277442921633, 725]}, \"properties\": {\"elevation\": 725}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0353963734018, 1055]}, \"properties\": {\"elevation\": 1055}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0430484546403, 686]}, \"properties\": {\"elevation\": 686}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0507005358789, 663]}, \"properties\": {\"elevation\": 663}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0583526171174, 459]}, \"properties\": {\"elevation\": 459}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0660046983559, 357]}, \"properties\": {\"elevation\": 357}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0736567795945, 352]}, \"properties\": {\"elevation\": 352}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.081308860833, 416]}, \"properties\": {\"elevation\": 416}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0889609420715, 435]}, \"properties\": {\"elevation\": 435}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.0966130233101, 456]}, \"properties\": {\"elevation\": 456}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.1042651045486, 504]}, \"properties\": {\"elevation\": 504}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.1119171857871, 631]}, \"properties\": {\"elevation\": 631}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.1195692670257, 1010]}, \"properties\": {\"elevation\": 1010}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.1272213482642, 1128]}, \"properties\": {\"elevation\": 1128}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.682463084791, 23.1348734295027, 1229]}, \"properties\": {\"elevation\": 1229}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 22.9894838859706, 775]}, \"properties\": {\"elevation\": 775}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 22.9971359672091, 621]}, \"properties\": {\"elevation\": 621}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0047880484477, 792]}, \"properties\": {\"elevation\": 792}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0124401296862, 456]}, \"properties\": {\"elevation\": 456}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0200922109247, 643]}, \"properties\": {\"elevation\": 643}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0277442921633, 681]}, \"properties\": {\"elevation\": 681}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0353963734018, 555]}, \"properties\": {\"elevation\": 555}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0430484546403, 520]}, \"properties\": {\"elevation\": 520}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0507005358789, 304]}, \"properties\": {\"elevation\": 304}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0583526171174, 328]}, \"properties\": {\"elevation\": 328}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0660046983559, 374]}, \"properties\": {\"elevation\": 374}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0736567795945, 397]}, \"properties\": {\"elevation\": 397}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.081308860833, 442]}, \"properties\": {\"elevation\": 442}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0889609420715, 621]}, \"properties\": {\"elevation\": 621}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.0966130233101, 488]}, \"properties\": {\"elevation\": 488}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.1042651045486, 761]}, \"properties\": {\"elevation\": 761}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.1119171857871, 1000]}, \"properties\": {\"elevation\": 1000}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.1195692670257, 963]}, \"properties\": {\"elevation\": 963}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.1272213482642, 1310]}, \"properties\": {\"elevation\": 1310}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.673708354567, 23.1348734295027, 1333]}, \"properties\": {\"elevation\": 1333}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 22.9894838859706, 608]}, \"properties\": {\"elevation\": 608}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 22.9971359672091, 310]}, \"properties\": {\"elevation\": 310}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0047880484477, 433]}, \"properties\": {\"elevation\": 433}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0124401296862, 275]}, \"properties\": {\"elevation\": 275}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0200922109247, 338]}, \"properties\": {\"elevation\": 338}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0277442921633, 324]}, \"properties\": {\"elevation\": 324}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0353963734018, 334]}, \"properties\": {\"elevation\": 334}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0430484546403, 308]}, \"properties\": {\"elevation\": 308}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0507005358789, 395]}, \"properties\": {\"elevation\": 395}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0583526171174, 382]}, \"properties\": {\"elevation\": 382}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0660046983559, 382]}, \"properties\": {\"elevation\": 382}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0736567795945, 475]}, \"properties\": {\"elevation\": 475}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.081308860833, 468]}, \"properties\": {\"elevation\": 468}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0889609420715, 660]}, \"properties\": {\"elevation\": 660}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.0966130233101, 787]}, \"properties\": {\"elevation\": 787}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.1042651045486, 687]}, \"properties\": {\"elevation\": 687}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.1119171857871, 964]}, \"properties\": {\"elevation\": 964}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.1195692670257, 1315]}, \"properties\": {\"elevation\": 1315}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.1272213482642, 927]}, \"properties\": {\"elevation\": 927}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.664953624342, 23.1348734295027, 1019]}, \"properties\": {\"elevation\": 1019}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 22.9894838859706, 370]}, \"properties\": {\"elevation\": 370}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 22.9971359672091, 275]}, \"properties\": {\"elevation\": 275}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0047880484477, 275]}, \"properties\": {\"elevation\": 275}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0124401296862, 358]}, \"properties\": {\"elevation\": 358}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0200922109247, 338]}, \"properties\": {\"elevation\": 338}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0277442921633, 335]}, \"properties\": {\"elevation\": 335}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0353963734018, 301]}, \"properties\": {\"elevation\": 301}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0430484546403, 382]}, \"properties\": {\"elevation\": 382}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0507005358789, 609]}, \"properties\": {\"elevation\": 609}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0583526171174, 444]}, \"properties\": {\"elevation\": 444}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0660046983559, 516]}, \"properties\": {\"elevation\": 516}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0736567795945, 531]}, \"properties\": {\"elevation\": 531}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.081308860833, 653]}, \"properties\": {\"elevation\": 653}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0889609420715, 797]}, \"properties\": {\"elevation\": 797}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.0966130233101, 977]}, \"properties\": {\"elevation\": 977}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.1042651045486, 987]}, \"properties\": {\"elevation\": 987}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.1119171857871, 1180]}, \"properties\": {\"elevation\": 1180}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.1195692670257, 1093]}, \"properties\": {\"elevation\": 1093}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.1272213482642, 795]}, \"properties\": {\"elevation\": 795}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.656198894117, 23.1348734295027, 771]}, \"properties\": {\"elevation\": 771}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 22.9894838859706, 257]}, \"properties\": {\"elevation\": 257}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 22.9971359672091, 268]}, \"properties\": {\"elevation\": 268}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0047880484477, 259]}, \"properties\": {\"elevation\": 259}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0124401296862, 293]}, \"properties\": {\"elevation\": 293}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0200922109247, 347]}, \"properties\": {\"elevation\": 347}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0277442921633, 387]}, \"properties\": {\"elevation\": 387}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0353963734018, 629]}, \"properties\": {\"elevation\": 629}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0430484546403, 691]}, \"properties\": {\"elevation\": 691}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0507005358789, 843]}, \"properties\": {\"elevation\": 843}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0583526171174, 684]}, \"properties\": {\"elevation\": 684}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0660046983559, 462]}, \"properties\": {\"elevation\": 462}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0736567795945, 618]}, \"properties\": {\"elevation\": 618}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.081308860833, 721]}, \"properties\": {\"elevation\": 721}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0889609420715, 1080]}, \"properties\": {\"elevation\": 1080}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.0966130233101, 971]}, \"properties\": {\"elevation\": 971}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.1042651045486, 947]}, \"properties\": {\"elevation\": 947}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.1119171857871, 882]}, \"properties\": {\"elevation\": 882}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.1195692670257, 805]}, \"properties\": {\"elevation\": 805}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.1272213482642, 734]}, \"properties\": {\"elevation\": 734}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.647444163893, 23.1348734295027, 688]}, \"properties\": {\"elevation\": 688}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 22.9894838859706, 237]}, \"properties\": {\"elevation\": 237}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 22.9971359672091, 236]}, \"properties\": {\"elevation\": 236}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0047880484477, 239]}, \"properties\": {\"elevation\": 239}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0124401296862, 303]}, \"properties\": {\"elevation\": 303}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0200922109247, 354]}, \"properties\": {\"elevation\": 354}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0277442921633, 541]}, \"properties\": {\"elevation\": 541}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0353963734018, 487]}, \"properties\": {\"elevation\": 487}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0430484546403, 670]}, \"properties\": {\"elevation\": 670}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0507005358789, 814]}, \"properties\": {\"elevation\": 814}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0583526171174, 631]}, \"properties\": {\"elevation\": 631}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0660046983559, 505]}, \"properties\": {\"elevation\": 505}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0736567795945, 607]}, \"properties\": {\"elevation\": 607}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.081308860833, 731]}, \"properties\": {\"elevation\": 731}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0889609420715, 1042]}, \"properties\": {\"elevation\": 1042}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.0966130233101, 709]}, \"properties\": {\"elevation\": 709}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.1042651045486, 779]}, \"properties\": {\"elevation\": 779}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.1119171857871, 557]}, \"properties\": {\"elevation\": 557}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.1195692670257, 531]}, \"properties\": {\"elevation\": 531}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.1272213482642, 537]}, \"properties\": {\"elevation\": 537}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.638689433668, 23.1348734295027, 556]}, \"properties\": {\"elevation\": 556}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 22.9894838859706, 274]}, \"properties\": {\"elevation\": 274}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 22.9971359672091, 293]}, \"properties\": {\"elevation\": 293}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0047880484477, 310]}, \"properties\": {\"elevation\": 310}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0124401296862, 379]}, \"properties\": {\"elevation\": 379}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0200922109247, 351]}, \"properties\": {\"elevation\": 351}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0277442921633, 502]}, \"properties\": {\"elevation\": 502}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0353963734018, 642]}, \"properties\": {\"elevation\": 642}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0430484546403, 556]}, \"properties\": {\"elevation\": 556}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0507005358789, 662]}, \"properties\": {\"elevation\": 662}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0583526171174, 776]}, \"properties\": {\"elevation\": 776}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0660046983559, 623]}, \"properties\": {\"elevation\": 623}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0736567795945, 524]}, \"properties\": {\"elevation\": 524}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.081308860833, 624]}, \"properties\": {\"elevation\": 624}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0889609420715, 782]}, \"properties\": {\"elevation\": 782}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.0966130233101, 648]}, \"properties\": {\"elevation\": 648}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.1042651045486, 469]}, \"properties\": {\"elevation\": 469}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.1119171857871, 486]}, \"properties\": {\"elevation\": 486}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.1195692670257, 476]}, \"properties\": {\"elevation\": 476}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.1272213482642, 395]}, \"properties\": {\"elevation\": 395}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.629934703444, 23.1348734295027, 468]}, \"properties\": {\"elevation\": 468}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 22.9894838859706, 416]}, \"properties\": {\"elevation\": 416}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 22.9971359672091, 445]}, \"properties\": {\"elevation\": 445}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0047880484477, 495]}, \"properties\": {\"elevation\": 495}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0124401296862, 480]}, \"properties\": {\"elevation\": 480}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0200922109247, 524]}, \"properties\": {\"elevation\": 524}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0277442921633, 502]}, \"properties\": {\"elevation\": 502}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0353963734018, 565]}, \"properties\": {\"elevation\": 565}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0430484546403, 774]}, \"properties\": {\"elevation\": 774}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0507005358789, 823]}, \"properties\": {\"elevation\": 823}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0583526171174, 853]}, \"properties\": {\"elevation\": 853}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0660046983559, 521]}, \"properties\": {\"elevation\": 521}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0736567795945, 578]}, \"properties\": {\"elevation\": 578}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.081308860833, 412]}, \"properties\": {\"elevation\": 412}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0889609420715, 588]}, \"properties\": {\"elevation\": 588}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.0966130233101, 433]}, \"properties\": {\"elevation\": 433}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.1042651045486, 465]}, \"properties\": {\"elevation\": 465}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.1119171857871, 386]}, \"properties\": {\"elevation\": 386}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.1195692670257, 470]}, \"properties\": {\"elevation\": 470}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.1272213482642, 387]}, \"properties\": {\"elevation\": 387}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.621179973219, 23.1348734295027, 359]}, \"properties\": {\"elevation\": 359}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 22.9894838859706, 296]}, \"properties\": {\"elevation\": 296}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 22.9971359672091, 359]}, \"properties\": {\"elevation\": 359}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0047880484477, 367]}, \"properties\": {\"elevation\": 367}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0124401296862, 391]}, \"properties\": {\"elevation\": 391}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0200922109247, 480]}, \"properties\": {\"elevation\": 480}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0277442921633, 751]}, \"properties\": {\"elevation\": 751}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0353963734018, 783]}, \"properties\": {\"elevation\": 783}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0430484546403, 741]}, \"properties\": {\"elevation\": 741}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0507005358789, 530]}, \"properties\": {\"elevation\": 530}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0583526171174, 728]}, \"properties\": {\"elevation\": 728}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0660046983559, 692]}, \"properties\": {\"elevation\": 692}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0736567795945, 475]}, \"properties\": {\"elevation\": 475}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.081308860833, 401]}, \"properties\": {\"elevation\": 401}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0889609420715, 405]}, \"properties\": {\"elevation\": 405}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.0966130233101, 320]}, \"properties\": {\"elevation\": 320}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.1042651045486, 356]}, \"properties\": {\"elevation\": 356}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.1119171857871, 412]}, \"properties\": {\"elevation\": 412}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.1195692670257, 419]}, \"properties\": {\"elevation\": 419}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.1272213482642, 315]}, \"properties\": {\"elevation\": 315}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.612425242994, 23.1348734295027, 316]}, \"properties\": {\"elevation\": 316}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 22.9894838859706, 354]}, \"properties\": {\"elevation\": 354}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 22.9971359672091, 228]}, \"properties\": {\"elevation\": 228}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0047880484477, 322]}, \"properties\": {\"elevation\": 322}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0124401296862, 303]}, \"properties\": {\"elevation\": 303}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0200922109247, 441]}, \"properties\": {\"elevation\": 441}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0277442921633, 776]}, \"properties\": {\"elevation\": 776}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0353963734018, 764]}, \"properties\": {\"elevation\": 764}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0430484546403, 519]}, \"properties\": {\"elevation\": 519}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0507005358789, 397]}, \"properties\": {\"elevation\": 397}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0583526171174, 620]}, \"properties\": {\"elevation\": 620}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0660046983559, 508]}, \"properties\": {\"elevation\": 508}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0736567795945, 411]}, \"properties\": {\"elevation\": 411}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.081308860833, 402]}, \"properties\": {\"elevation\": 402}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0889609420715, 296]}, \"properties\": {\"elevation\": 296}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.0966130233101, 391]}, \"properties\": {\"elevation\": 391}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.1042651045486, 320]}, \"properties\": {\"elevation\": 320}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.1119171857871, 352]}, \"properties\": {\"elevation\": 352}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.1195692670257, 298]}, \"properties\": {\"elevation\": 298}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.1272213482642, 297]}, \"properties\": {\"elevation\": 297}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.60367051277, 23.1348734295027, 434]}, \"properties\": {\"elevation\": 434}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 22.9894838859706, 227]}, \"properties\": {\"elevation\": 227}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 22.9971359672091, 235]}, \"properties\": {\"elevation\": 235}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0047880484477, 229]}, \"properties\": {\"elevation\": 229}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0124401296862, 475]}, \"properties\": {\"elevation\": 475}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0200922109247, 448]}, \"properties\": {\"elevation\": 448}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0277442921633, 411]}, \"properties\": {\"elevation\": 411}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0353963734018, 577]}, \"properties\": {\"elevation\": 577}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0430484546403, 415]}, \"properties\": {\"elevation\": 415}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0507005358789, 350]}, \"properties\": {\"elevation\": 350}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0583526171174, 350]}, \"properties\": {\"elevation\": 350}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0660046983559, 279]}, \"properties\": {\"elevation\": 279}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0736567795945, 327]}, \"properties\": {\"elevation\": 327}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.081308860833, 333]}, \"properties\": {\"elevation\": 333}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0889609420715, 314]}, \"properties\": {\"elevation\": 314}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.0966130233101, 264]}, \"properties\": {\"elevation\": 264}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.1042651045486, 325]}, \"properties\": {\"elevation\": 325}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.1119171857871, 280]}, \"properties\": {\"elevation\": 280}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.1195692670257, 367]}, \"properties\": {\"elevation\": 367}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.1272213482642, 568]}, \"properties\": {\"elevation\": 568}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.594915782545, 23.1348734295027, 746]}, \"properties\": {\"elevation\": 746}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 22.9894838859706, 252]}, \"properties\": {\"elevation\": 252}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 22.9971359672091, 231]}, \"properties\": {\"elevation\": 231}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0047880484477, 192]}, \"properties\": {\"elevation\": 192}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0124401296862, 232]}, \"properties\": {\"elevation\": 232}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0200922109247, 277]}, \"properties\": {\"elevation\": 277}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0277442921633, 329]}, \"properties\": {\"elevation\": 329}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0353963734018, 303]}, \"properties\": {\"elevation\": 303}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0430484546403, 298]}, \"properties\": {\"elevation\": 298}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0507005358789, 332]}, \"properties\": {\"elevation\": 332}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0583526171174, 408]}, \"properties\": {\"elevation\": 408}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0660046983559, 249]}, \"properties\": {\"elevation\": 249}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0736567795945, 233]}, \"properties\": {\"elevation\": 233}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.081308860833, 244]}, \"properties\": {\"elevation\": 244}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0889609420715, 251]}, \"properties\": {\"elevation\": 251}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.0966130233101, 386]}, \"properties\": {\"elevation\": 386}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.1042651045486, 538]}, \"properties\": {\"elevation\": 538}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.1119171857871, 614]}, \"properties\": {\"elevation\": 614}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.1195692670257, 530]}, \"properties\": {\"elevation\": 530}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.1272213482642, 502]}, \"properties\": {\"elevation\": 502}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.586161052321, 23.1348734295027, 393]}, \"properties\": {\"elevation\": 393}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 22.9894838859706, 202]}, \"properties\": {\"elevation\": 202}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 22.9971359672091, 184]}, \"properties\": {\"elevation\": 184}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0047880484477, 183]}, \"properties\": {\"elevation\": 183}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0124401296862, 165]}, \"properties\": {\"elevation\": 165}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0200922109247, 227]}, \"properties\": {\"elevation\": 227}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0277442921633, 227]}, \"properties\": {\"elevation\": 227}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0353963734018, 260]}, \"properties\": {\"elevation\": 260}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0430484546403, 340]}, \"properties\": {\"elevation\": 340}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0507005358789, 325]}, \"properties\": {\"elevation\": 325}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0583526171174, 256]}, \"properties\": {\"elevation\": 256}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0660046983559, 228]}, \"properties\": {\"elevation\": 228}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0736567795945, 315]}, \"properties\": {\"elevation\": 315}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.081308860833, 403]}, \"properties\": {\"elevation\": 403}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0889609420715, 526]}, \"properties\": {\"elevation\": 526}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.0966130233101, 584]}, \"properties\": {\"elevation\": 584}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.1042651045486, 506]}, \"properties\": {\"elevation\": 506}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.1119171857871, 339]}, \"properties\": {\"elevation\": 339}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.1195692670257, 327]}, \"properties\": {\"elevation\": 327}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.1272213482642, 342]}, \"properties\": {\"elevation\": 342}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.577406322096, 23.1348734295027, 253]}, \"properties\": {\"elevation\": 253}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 22.9894838859706, 161]}, \"properties\": {\"elevation\": 161}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 22.9971359672091, 139]}, \"properties\": {\"elevation\": 139}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0047880484477, 146]}, \"properties\": {\"elevation\": 146}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0124401296862, 150]}, \"properties\": {\"elevation\": 150}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0200922109247, 158]}, \"properties\": {\"elevation\": 158}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0277442921633, 192]}, \"properties\": {\"elevation\": 192}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0353963734018, 206]}, \"properties\": {\"elevation\": 206}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0430484546403, 359]}, \"properties\": {\"elevation\": 359}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0507005358789, 276]}, \"properties\": {\"elevation\": 276}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0583526171174, 214]}, \"properties\": {\"elevation\": 214}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0660046983559, 297]}, \"properties\": {\"elevation\": 297}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0736567795945, 354]}, \"properties\": {\"elevation\": 354}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.081308860833, 609]}, \"properties\": {\"elevation\": 609}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0889609420715, 565]}, \"properties\": {\"elevation\": 565}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.0966130233101, 451]}, \"properties\": {\"elevation\": 451}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.1042651045486, 330]}, \"properties\": {\"elevation\": 330}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.1119171857871, 285]}, \"properties\": {\"elevation\": 285}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.1195692670257, 263]}, \"properties\": {\"elevation\": 263}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.1272213482642, 189]}, \"properties\": {\"elevation\": 189}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.568651591871, 23.1348734295027, 208]}, \"properties\": {\"elevation\": 208}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 22.9894838859706, 147]}, \"properties\": {\"elevation\": 147}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 22.9971359672091, 135]}, \"properties\": {\"elevation\": 135}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0047880484477, 203]}, \"properties\": {\"elevation\": 203}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0124401296862, 185]}, \"properties\": {\"elevation\": 185}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0200922109247, 162]}, \"properties\": {\"elevation\": 162}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0277442921633, 164]}, \"properties\": {\"elevation\": 164}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0353963734018, 185]}, \"properties\": {\"elevation\": 185}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0430484546403, 325]}, \"properties\": {\"elevation\": 325}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0507005358789, 222]}, \"properties\": {\"elevation\": 222}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0583526171174, 232]}, \"properties\": {\"elevation\": 232}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0660046983559, 345]}, \"properties\": {\"elevation\": 345}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0736567795945, 421]}, \"properties\": {\"elevation\": 421}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.081308860833, 399]}, \"properties\": {\"elevation\": 399}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0889609420715, 363]}, \"properties\": {\"elevation\": 363}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.0966130233101, 178]}, \"properties\": {\"elevation\": 178}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.1042651045486, 174]}, \"properties\": {\"elevation\": 174}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.1119171857871, 178]}, \"properties\": {\"elevation\": 178}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.1195692670257, 169]}, \"properties\": {\"elevation\": 169}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.1272213482642, 348]}, \"properties\": {\"elevation\": 348}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.559896861647, 23.1348734295027, 342]}, \"properties\": {\"elevation\": 342}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 22.9894838859706, 125]}, \"properties\": {\"elevation\": 125}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 22.9971359672091, 149]}, \"properties\": {\"elevation\": 149}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0047880484477, 212]}, \"properties\": {\"elevation\": 212}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0124401296862, -32767]}, \"properties\": {\"elevation\": -32767}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0200922109247, 210]}, \"properties\": {\"elevation\": 210}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0277442921633, 256]}, \"properties\": {\"elevation\": 256}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0353963734018, 179]}, \"properties\": {\"elevation\": 179}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0430484546403, 248]}, \"properties\": {\"elevation\": 248}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0507005358789, 203]}, \"properties\": {\"elevation\": 203}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0583526171174, 321]}, \"properties\": {\"elevation\": 321}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0660046983559, 351]}, \"properties\": {\"elevation\": 351}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0736567795945, 189]}, \"properties\": {\"elevation\": 189}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.081308860833, 283]}, \"properties\": {\"elevation\": 283}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0889609420715, 185]}, \"properties\": {\"elevation\": 185}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.0966130233101, 169]}, \"properties\": {\"elevation\": 169}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.1042651045486, 170]}, \"properties\": {\"elevation\": 170}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.1119171857871, 297]}, \"properties\": {\"elevation\": 297}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.1195692670257, 513]}, \"properties\": {\"elevation\": 513}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.1272213482642, 564]}, \"properties\": {\"elevation\": 564}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.551142131422, 23.1348734295027, 550]}, \"properties\": {\"elevation\": 550}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 22.9894838859706, 117]}, \"properties\": {\"elevation\": 117}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 22.9971359672091, 144]}, \"properties\": {\"elevation\": 144}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0047880484477, 145]}, \"properties\": {\"elevation\": 145}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0124401296862, -32767]}, \"properties\": {\"elevation\": -32767}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0200922109247, 232]}, \"properties\": {\"elevation\": 232}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0277442921633, 248]}, \"properties\": {\"elevation\": 248}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0353963734018, 187]}, \"properties\": {\"elevation\": 187}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0430484546403, 210]}, \"properties\": {\"elevation\": 210}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0507005358789, 266]}, \"properties\": {\"elevation\": 266}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0583526171174, 458]}, \"properties\": {\"elevation\": 458}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0660046983559, 459]}, \"properties\": {\"elevation\": 459}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0736567795945, 228]}, \"properties\": {\"elevation\": 228}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.081308860833, 169]}, \"properties\": {\"elevation\": 169}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0889609420715, 169]}, \"properties\": {\"elevation\": 169}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.0966130233101, 248]}, \"properties\": {\"elevation\": 248}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.1042651045486, 307]}, \"properties\": {\"elevation\": 307}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.1119171857871, 300]}, \"properties\": {\"elevation\": 300}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.1195692670257, 349]}, \"properties\": {\"elevation\": 349}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.1272213482642, 400]}, \"properties\": {\"elevation\": 400}}, {\"type\": \"Feature\", \"geometry\": {\"type\": \"Point\", \"coordinates\": [120.542387401198, 23.1348734295027, 528]}, \"properties\": {\"elevation\": 528}}]}"';
+		//php_list = php_list.split("<");
+		//console.log(php_list[0]);
+		
+		//php_list_test = JSON.stringify(php_list_test);
+		
+		php_list_test = php_list_test.split("<");
+
+		//50*50
+		var temp = php_list_test[0].split(" ");
+		
+		var temp_longitude;
+		var temp_latitude;
+		var temp_height;
+		
+		var height_test;
+		var t_1,t_2,t_3;
+		var t_lo,t_la,t_h;
+		
+		var j = 0
+		while(1){
+			if(j == 40000){break;}
+			var ttt = new String('\\"coordinates\\":');
+			var ttt_1 = new String(temp[j]);
+			var isEquel = JSON.stringify(ttt_1) == JSON.stringify(ttt);
+			//console.log(isEquel);
+			if(isEquel == true)
+			{
+				t_1 = temp[j+1];
+				t_lo = t_1.toString().substring(1,t_1.toString().length-1);
+				//console.log(t_lo);
+				
+				t_2 = temp[j+2];
+				t_la = t_2.toString().substring(0,t_2.toString().length-1);
+				//console.log(t_la);
+				
+				t_3 = temp[j+3];
+				t_h = t_3.toString().substring(0,t_3.toString().length-3);
+
+				//console.log(t_h);
+				longitude.push(t_lo);
+				latitude.push(t_la);
+				if(parseInt(t_h) < 0){
+					console.log(parseInt(t_h));
+					terr_height.push(0);
+				}
+				else{
+					terr_height.push(parseInt(t_h));
+				}
+			}
+			j++;
+		}
+
+		console.log('********** test **************')
+		console.log(longitude)
+		console.log(latitude)
+		console.log(terr_height)
+		console.log('********** test **************')
+
+		// console.log(parseInt(parseFloat(longitude[109])*100))
+		// console.log(parseInt(parseFloat(latitude[109])*100))
+		
+
+		for(let i=0; i < earthquake_info.length; ++i){
+			find_center_height = 0;
+			for(let j=0; j < longitude.length; ++j){
+				if(parseInt(parseFloat(earthquake_info[i][2])*100) == parseInt(parseFloat(longitude[j])*100) && parseInt(parseFloat(earthquake_info[i][3])*100) == parseInt(parseFloat(latitude[j])*100)){
+					earthquake_center_height.push(parseFloat(terr_height[j]/1000));
+					find_center_height = 1;
+					break;
+				}
+				else{
+					if(j == longitude.length-1 && find_center_height == 0){
+						earthquake_center_height.push(0);
+						break;
+					}
+					continue;
+				}	
+			}
+
+		}
+
+		console.log('earthquake_center_height')
+		console.log(earthquake_center_height)
+		console.log(earthquake_center_height.length)
+
+
+		$('.text').text("");
+		
+		//console.log(longitude);
+		//console.log(latitude);
+		//console.log(terr_height); //50*50
+		
+		//190619 : new height >> 785*785
+		
+		//1D to 2D
+		while(terr_height.length > 0) {
+			nArr.push(terr_height.splice(0,50));
+		}	
+		
+		var k1, k2, k_init;
+		var h1, h2, h3, h4 ,h5 ,h6 ,h7;
+		var h8, h9, h10, h11, h12, h13, h14, h15, h16;
+		
+
+
+		console.log('nArr.length');
+		console.log(nArr.length);
+		//console.log(nArr[nArr.length-1].length);
+		
+		/*
+		if(nArr.length > nArr[nArr.length-1].length){
+			var add_index = nArr.length - nArr[nArr.length-1].length;
+			for(var i = 0; i < add_index; i++){
+				nArr[nArr.length-1][((nArr[nArr.length-1].length)-1)+i] = nArr[nArr.length-1][(nArr[nArr.length-1].length)-1];
+			}
+		}
+		*/
+		console.log('nArr');
+		console.log(nArr);
+		
+		for(k1 = 0; k1 < nArr.length; k1++){
+			terr_height_new.push(nArr[k1][0]);
+			for(k2 = 0; k2 < nArr.length-1; k2++){
+				
+				h8 = (parseInt(nArr[k1][k2]) + parseInt(nArr[k1][k2+1]))/2.0;//mid
+				terr_height_new.push(Math.abs(h8));
+				terr_height_new.push(Math.abs(parseInt(nArr[k1][k2+1])));
+			}
+		}
+		var nArr1 = [];
+		while(terr_height_new.length > 0) {
+			nArr1.push(terr_height_new.splice(0,99));
+		}
+		
+		for(k1 = 0;k1 < 99 ; k1++){
+			terr_height_new_1.push(nArr1[0][k1]);
+			for(k2 = 0; k2 < nArr.length-1; k2++){
+				h8 = (parseInt(nArr1[k2][k1]) + parseInt(nArr1[k2+1][k1]))/2.0;//mid
+				terr_height_new_1.push(Math.abs(h8));
+				terr_height_new_1.push(Math.abs(parseInt(nArr1[k2+1][k1])));
+
+			}
+		}
+		console.log('terr_height_new_1');
+		console.log(terr_height_new_1);
+		
+		for(var i = 0 ; i < 50; i++){
+			for(var j = 0 ; j <50 ; j++){
+				nArr_new.push(nArr[i][j]);
+			}
+		}
+		
+		console.log('nArr_new');
+		console.log(nArr_new);
+		arr_h = terr_height_new_1.map(function(x) { return x /100.0; });
+		
+		//ha = arr_h[308113]; // mid
+		ha = arr_h[1249];
+
+		
+		//cy_loc_temp = arr_h[157300]; //(300, 200)
+		cy_loc_temp = arr_h[600];
+		
+		console.log('arr_h');
+		console.log(arr_h);
+		//console.log(arr_h_new);
+	}
+	
+	function reverseArr(arr, left, right) {
+		while (left < right) {
+			var temp = arr[left];
+			arr[left] = arr[right];
+			arr[right] = temp;
+			left++;
+			right--;
+		}
+		return arr;
+	}
+
+	
+	function clk_model(){
+		//world = new World([1586263.69261,5028319.00199,1590281.07303,5030555.5249],100,3.0,0.0);
+		//_left/_right/_up/_down
+		//world = new World([_right, _down, _left, _up], 100, 3.0, 0.0);
+		
+		/*
+		_left = localStorage.getItem("_left");
+		_right = localStorage.getItem("_right");
+		_up = localStorage.getItem("_up");
+		_down = localStorage.getItem("_down");
+		*/
+		
+		//world = new World([_left,_down,_right,_up],100,3.0,0.0); //////////
+		world = new World([1586263.69261,5028319.00199,1590281.07303,5030555.5249],100,3.0,0.0);
+		lyr[0] = new MapLayer({q:1,stats:{max:587.641723633,min:34.0071563721},type:"dem",name:"terrain hights",dem:[{width:99,s:{},plane:{width:100,offsetX:0,offsetY:0,height:100},t:{},height:99}]})
+		lyr[0].dem[0].data = arr_h;
+		lyr[0].dem[0].t.data = localStorage.getItem("resize");
+		//console.log(lyr[0].dem[0].t.data);
+		
+		// build models
+		buildModels(scene);
+		
+		container.appendChild(renderer.domElement);
+		render();
+		
+		//localStorage.clear();
+	
+	}
+	function takeScreenshot() {
+
+		// open in new window like this
+		//
+		var w = window.open('', '');
+		w.document.title = "Screenshot";
+		//w.document.body.style.backgroundColor = "red";
+		var img = new Image();
+		// Without 'preserveDrawingBuffer' set to true, we must render now
+		renderer.render(scene, camera);
+		img.src = renderer.domElement.toDataURL();
+		w.document.body.appendChild(img);  
+	}
+	
+	// Add default key event listener
+	function addDefaultKeyEventListener() {
+		window.addEventListener("keydown", function(e){
+
+			var keyPressed = e.which;
+			if (keyPressed == 27) closeClicked(); // ESC
+			else if (keyPressed == 73) showInfo();	// I
+			else if (keyPressed == 76) toggleLabelVisibility();	// L
+			else if (!e.ctrlKey && e.shiftKey) {
+				if (keyPressed == 82) controls.reset();	 // Shift + R
+				else if (keyPressed == 83) { // Shift + S
+					takeScreenshot();
+				}
+			}
+		});
+	}
+	
+	var labelVisible = true;
+	var option = {
+		sole_height: 1.5,
+		side: {color: 0xc7ac92},
+		frame: {color: 0},
+		label: {pointerColor: 0xc0c0d0, autoSize: false, fontSize: "10px"},
+		qmarker: {r: 0.25, c:0xffff00, o:0.8}};
+
+	var ua = window.navigator.userAgent.toLowerCase();
+	var isIE = (ua.indexOf("msie") != -1 || ua.indexOf("trident") != -1);
+
+	var projector = new THREE.Projector();
+	var xAxis = new THREE.Vector3(1, 0, 0), zAxis = new THREE.Vector3(0, 0, 1);
+
+	// World class
+	World = function ( mapExtent, width, zExaggeration, zShift ) {
+		this.mapExtent = mapExtent;
+		this.width = width;
+		this.height = width * (mapExtent[3] - mapExtent[1]) / (mapExtent[2] - mapExtent[0]);
+		this.scale = width / (mapExtent[2] - mapExtent[0]);
+		this.zExaggeration = zExaggeration;
+		this.zScale = this.scale * zExaggeration;
+		this.zShift = zShift;
+	};
+
+	World.prototype = {
+
+		constructor: World,
+		toMapCoordinates: function (x, y, z) {
+			return {x : (x + this.width / 2) / this.scale + this.mapExtent[0],
+							y : (y + this.height / 2) / this.scale + this.mapExtent[1],
+							z : z / this.zScale - this.zShift};
+		}
+
+	};
+
+	// MapLayer class
+	MapLayer = function ( params ) {
+		for (var k in params) {
+			this[k] = params[k];
+		}
+	};
+
+	MapLayer.prototype = {
+
+		constructor: MapLayer,
+
+		meshes: function () {
+			var m = [];
+			if (this.type == "dem") {
+				for (var i = 0, l = this.dem.length; i < l; i++) {
+					m.push(this.dem[i].obj);
+
+					//var aObjs = this.dem[i].aObjs || [];
+					//for (var j = 0, k = aObjs.length; j < k; j++) m.push(aObjs[j]);
+				}
+			} else {
+				for (var i = 0, l = this.f.length; i < l; i++) {
+					this.f[i].objs.forEach(function (mesh) {
+						m.push(mesh);
+					});
+				}
+			}
+			return m;
+		},
+
+		setVisible: function (visible) {
+			if (this.type == "dem") {
+				for (var i = 0, l = this.dem.length; i < l; i++) {
+					this.dem[i].obj.visible = visible;
+
+					var aObjs = this.dem[i].aObjs;
+					if (aObjs !== undefined) {
+						for (var j = 0, m = aObjs.length; j < m; j++) {
+							aObjs[j].visible = visible;
+						}
+					}
+				}
+			} else {
+				for (var i = 0, l = this.f.length; i < l; i++) {
+					var f = this.f[i];
+					f.obj.visible = visible;	// TODO: objs
+					if (f.aObj !== undefined) f.aObj.visible = visible;
+					if (f.aElem !== undefined) f.aElem.style.display = (visible) ? "block": "none";
+				}
+			}
+		}
+
+	};
+	
+	// Call this once to create materials
+	function createMaterials() {
+		var material;
+		for (var i = 0, l = mat.length; i < l; i++) {
+			var m = mat[i];
+			if (m.type == 0) {
+				material = new THREE.MeshLambertMaterial({color:m.c, ambient:m.c});
+			}
+			else if (m.type == 1) {
+				material = new THREE.LineBasicMaterial({color:m.c});
+			}
+			else {		// type == 2
+				material = new THREE.MeshLambertMaterial({color:m.c, ambient:m.c, wireframe:true});
+			}
+			if (m.o !== undefined && m.o < 1) {
+				material.opacity = m.o;
+				material.transparent = true;
+			}
+			mat[i].m = material;
+		}
+	}
+
+	// Create a texture with image data and update texture when the image has been loaded
+	function createTexture(imageData) {
+		var texture, image = new Image();
+		image.onload = function () { texture.needsUpdate = true; };
+		image.src = imageData;
+		texture = new THREE.Texture(image);
+		return texture;
+	}
+
+	var m_loader = new THREE.TextureLoader();
+	m_loader.crossOrigin = '';
+
+	// Terrain material
+	var material;
+	var material_wireframe;
+	var plane;
+	var geometry = new THREE.Geometry();
+	plane = new THREE.Mesh(geometry, material);
+	// Terrain functions
+	function buildDEM(scene, layer, dem) {
+
+		geometry_plane = new THREE.PlaneGeometry( dem.plane.width, dem.plane.height,
+												dem.width - 1, dem.height - 1);
+												
+		console.log('dem.width - 1');
+		console.log(dem.width - 1);
+		console.log('dem.height - 1');
+		console.log(dem.height - 1);
+		// Filling of the DEM plane
+		var j = 0;
+		var m = geometry_plane.vertices.length;
+		while(j < m){
+			geometry_plane.vertices[j].z = dem.data[j]*z_rate;
+			j++;
+		}
+		geometry_plane.dynamic = true;
+		geometry_plane.computeFaceNormals();
+		geometry_plane.computeVertexNormals();
+		geometry_plane.normalsNeedUpdate = true;
+		geometry_plane.verticesNeedUpdate = true;
+		
+		console.log("dem done");
+		
+		if (dem.m !== undefined) material = mat[dem.m].m;
+		else {
+			var texture;
+			if (dem.t.src === undefined) {
+				//texture = new THREE.TextureLoader().load('test.PNG')
+				texture = createTexture(dem.t.data);
+				}
+			else {
+				//texture = new THREE.TextureLoader().load('test.PNG')
+				texture = THREE.ImageUtils.loadTexture(dem.t.src);
+				texture.needsUpdate = true;
+			}
+			if (dem.t.o === undefined) dem.t.o = 1;
+			material = new THREE.MeshPhongMaterial({map: texture, opacity: dem.t.o, transparent: (dem.t.o < 1)});
+			material_wireframe = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true});
+		}
+		if (!isIE) material.side = THREE.DoubleSide;
+		if(localStorage.getItem("wf_storage") == 0){
+			plane = new THREE.Mesh(geometry_plane, material);
+			queryableObjs = [];
+		}
+		else if(localStorage.getItem("wf_storage") == 1){
+			plane = new THREE.SceneUtils.createMultiMaterialObject(geometry_plane, [material, material_wireframe]);
+			queryableObjs = [];
+		}
+
+		//plane = new THREE.Mesh(geometry, material);
+		//plane = new THREE.SceneUtils.createMultiMaterialObject(geometry, [material, material_wireframe]);
+		if (dem.plane.offsetX != 0) plane.position.x = dem.plane.offsetX;
+		if (dem.plane.offsetY != 0) plane.position.y = dem.plane.offsetY;
+		plane.userData = [layer.index, 0];
+		plane.needsUpdate = true;
+		scene.add(plane);
+		if (layer.q) queryableObjs.push(plane);
+		dem.obj = plane;
+	}
+
+	/**
+	 * buildSides()
+	 *	 - scene : scene in which we add sides
+	 *	 - dem : a dem object
+	 *	 - color : color of sides
+	 *	 - sole_height : depth of bottom under zero
+	 *
+	 *	Creates sides and bottom of the DEM to give an impression of "extruding" 
+	 *	and increase the 3D aspect.
+	 *	It adds also lights to see correctly the meshes created.
+	 */
+	var plane_bottom;
+	var mesh_1;
+	var mesh_2;
+	var mesh_3;
+	var mesh_4;
+	var geom_s;
+	
+	var altitudes = {
+			'back': [],
+			'left': [],
+			'front': [],
+			'right': []
+		};
+
+	function buildSides(scene, dem, color, sole_height) {
+		// Filling of altitudes dictionary
+		var w = dem.width, h = dem.height;
+		altitudes['back'] = dem.data.slice(0, w);
+		altitudes['front'] = dem.data.slice(w * (h - 1));
+		for (var y = 0; y < h; y++) {
+			altitudes['left'].push(dem.data[y * w]);
+			altitudes['right'].push(dem.data[(y + 1) * w - 1]);
+		}
+
+		// Material
+		if (dem.s.o === undefined) dem.s.o = 1;
+
+		var front_material = new THREE.MeshLambertMaterial({ color: color,
+																ambient: color,
+																opacity: dem.s.o,
+																transparent: (dem.s.o < 1)});
+		var back_material;
+		if (isIE) {	 // Shader compilation error occurs with double sided material on IE11
+			back_material = front_material.clone();
+			back_material.side = THREE.BackSide;
+		}
+		else {
+			front_material.side = THREE.DoubleSide;
+			back_material = front_material;
+		}
+
+		// Sides
+		var side_width;
+		for (var side in altitudes) {
+			if (side == 'back' || side == 'front')
+				side_width = dem.plane.width;
+			else
+				side_width = dem.plane.height;
+
+			//var geom = new THREE.PlaneGeometry(side_width, 2 * sole_height, altitudes[side].length -1, 1);
+			geom_s = new THREE.PlaneGeometry(side_width, 2 * sole_height, altitudes[side].length -1, 1);
+			// Filling of the geometry vertices
+			for (var i = 0, l = altitudes[side].length; i < l; i++) {
+				geom_s.vertices[i].y = altitudes[side][i];
+			}
+			
+			geom_s.dynamic = true;
+			geom_s.computeFaceNormals();
+			geom_s.computeVertexNormals();
+			geom_s.normalsNeedUpdate = true;
+			geom_s.verticesNeedUpdate = true;
+
+			// Rotation(s) and translating(s) according to the side
+			
+			switch (side) {
+				case 'back' :
+					mesh_1 = new THREE.Mesh(geom_s, back_material);
+					mesh_1.position.y = dem.plane.height/2;
+					mesh_1.rotateOnAxis(new THREE.Vector3(1,0,0), Math.PI/2);
+					break;
+				case 'left' :
+					mesh_2 = new THREE.Mesh(geom_s, front_material);
+					mesh_2.position.x = -dem.plane.width/2;
+					mesh_2.rotateOnAxis(new THREE.Vector3(0,0,1), -Math.PI/2);
+					mesh_2.rotateOnAxis(new THREE.Vector3(1,0,0), Math.PI/2);
+					break;
+				case 'front' :
+					mesh_3 = new THREE.Mesh(geom_s, front_material);
+					mesh_3.position.y = -dem.plane.height/2;
+					mesh_3.rotateOnAxis(new THREE.Vector3(1,0,0), Math.PI/2);
+					break;
+				case 'right' :
+					mesh_4 = new THREE.Mesh(geom_s, back_material);
+					mesh_4.position.x = dem.plane.width/2;
+					mesh_4.rotateOnAxis(new THREE.Vector3(0,0,1), -Math.PI/2);
+					mesh_4.rotateOnAxis(new THREE.Vector3(1,0,0), Math.PI/2);
+					break;
+			}
+
+			scene.add(mesh_1);
+			scene.add(mesh_2);
+			scene.add(mesh_3);
+			scene.add(mesh_4);
+			dem.aObjs.push(mesh_1);
+			dem.aObjs.push(mesh_2);
+			dem.aObjs.push(mesh_3);
+			dem.aObjs.push(mesh_4);
+
+			}
+
+		// Bottom
+		var geom_bottom = new THREE.PlaneGeometry(dem.plane.width, dem.plane.height, 1, 1);
+		plane_bottom = new THREE.Mesh(geom_bottom, back_material);
+		plane_bottom.position.z = -sole_height;
+		scene.add(plane_bottom);
+		dem.aObjs.push(plane_bottom);
+
+		// Additional lights
+		var light2 = new THREE.DirectionalLight(0xffffff, 0.3);
+		light2.position.set(dem.plane.width, -dem.plane.height / 2, -10);
+		scene.add(light2);
+
+		var light3 = new THREE.DirectionalLight(0xffffff, 0.3);
+		light3.position.set(-dem.plane.width, dem.plane.height / 2, -10);
+		scene.add(light3);
+	}
+
+	function buildFrame(scene, dem, color, sole_height) {
+		var line_mat = new THREE.LineBasicMaterial({color:color});
+
+		// horizontal rectangle at bottom
+		var hw = dem.plane.width / 2, hh = dem.plane.height / 2, z = -sole_height;
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push(new THREE.Vector3(-hw, -hh, z));
+		geometry.vertices.push(new THREE.Vector3(hw, -hh, z));
+		geometry.vertices.push(new THREE.Vector3(hw, hh, z));
+		geometry.vertices.push(new THREE.Vector3(-hw, hh, z));
+		geometry.vertices.push(new THREE.Vector3(-hw, -hh, z));
+
+		var obj = new THREE.Line(geometry, line_mat);
+		scene.add(obj);
+		dem.aObjs.push(obj);
+
+		// vertical lines at corners
+		var pts = [[-hw, -hh, dem.data[dem.data.length - dem.width]],
+							[hw, -hh, dem.data[dem.data.length - 1]],
+							[hw, hh, dem.data[dem.width-1]],
+							[-hw, hh, dem.data[0]]];
+		for (var i = 0; i < 4; i++) {
+			var pt = pts[i];
+			geometry = new THREE.Geometry();
+			geometry.vertices.push(new THREE.Vector3(pt[0], pt[1], pt[2]));
+			geometry.vertices.push(new THREE.Vector3(pt[0], pt[1], z));
+
+			obj = new THREE.Line(geometry, line_mat);
+			scene.add(obj);
+			dem.aObjs.push(obj);
+		}
+	}
+
+	// Vector functions
+	function buildPointLayer(scene, layer) {
+		var f, geometry, obj;
+		var deg2rad = Math.PI / 180;
+		for (var i = 0, l = layer.f.length; i < l; i++) {
+			// each feature in the layer
+			f = layer.f[i];
+			f.objs = [];
+			f.pts.forEach(function (pt) {
+				if (layer.objType == "Cube") geometry = new THREE.CubeGeometry(f.w, f.h, f.d);
+				else if (layer.objType == "Cylinder" || layer.objType == "Cone") geometry = new THREE.CylinderGeometry(f.rt, f.rb, f.h);
+				else geometry = new THREE.SphereGeometry(f.r);
+
+				obj = new THREE.Mesh(geometry, mat[f.m].m);
+				obj.position.set(pt[0], pt[1], pt[2]);
+				if (f.rotateX) obj.rotation.x = f.rotateX * deg2rad;
+				obj.userData = [layer.index, i];
+				scene.add(obj);
+				if (layer.q) queryableObjs.push(obj);
+				f.objs.push(obj);
+			});
+		}
+	}
+
+	function buildJSONPointLayer(scene, layer) {
+		var manager = new THREE.LoadingManager();
+		var loader = new THREE.JSONLoader(manager);
+		var f, obj, json_objs=[];
+		var deg2rad = Math.PI / 180;
+
+		for (var i = 0, l = layer.f.length; i < l; i++) {
+			// each feature in the layer
+			f = layer.f[i];
+			f.objs = [];
+			if (json_objs[f.json_index] === undefined) {
+				var result = loader.parse(JSON.parse(jsons[f.json_index]));
+				json_objs[f.json_index] = new THREE.Mesh(result.geometry, result.materials[0]);
+			}
+			f.pts.forEach(function (pt) {
+				obj = json_objs[f.json_index].clone();
+				obj.position.set(pt[0], pt[1], pt[2]);
+				if (f.rotateX || f.rotateY || f.rotateZ)
+					obj.rotation.set((f.rotateX || 0) * deg2rad, (f.rotateY || 0) * deg2rad, (f.rotateZ || 0) * deg2rad);
+				if (f.scale) obj.scale.set(f.scale, f.scale, f.scale);
+				obj.userData = [layer.index, i];
+				scene.add(obj);
+				if (layer.q) queryableObjs.push(obj);
+				f.objs.push(obj);
+			});
+		}
+	}
+
+	function buildLineLayer(scene, layer) {
+		var f, geometry, obj, userData;
+		for (var i = 0, l = layer.f.length; i < l; i++) {
+			// each feature in the layer
+			f = layer.f[i];
+			f.objs = [];
+			userData = [layer.index, i];
+
+			if (layer.objType == "Line") {
+				f.lines.forEach(function (line) {
+					geometry = new THREE.Geometry();
+					line.forEach(function (pt) {
+						geometry.vertices.push(new THREE.Vector3(pt[0], pt[1], pt[2]));
+					});
+					obj = new THREE.Line(geometry, mat[f.m].m);
+					obj.userData = userData;
+					scene.add(obj);
+					if (layer.q) queryableObjs.push(obj);
+					f.objs.push(obj);
+				});
+			}
+			else if (layer.objType == "Pipe" || layer.objType == "Cone") {
+				var hasJoints = (layer.objType == "Pipe");
+				var pt, pt0 = new THREE.Vector3(), pt1 = new THREE.Vector3(), sub = new THREE.Vector3();
+				f.lines.forEach(function (line) {
+					for (var j = 0, m = line.length; j < m; j++) {
+						pt = line[j];
+						pt1.set(pt[0], pt[1], pt[2]);
+
+						if (hasJoints) {
+							geometry = new THREE.SphereGeometry(f.rb);
+							obj = new THREE.Mesh(geometry, mat[f.m].m);
+							obj.position.copy(pt1);
+							obj.userData = userData;
+							scene.add(obj);
+							if (layer.q) queryableObjs.push(obj);
+							f.objs.push(obj);
+						}
+
+						if (j) {
+							sub.subVectors(pt1, pt0);
+							geometry = new THREE.CylinderGeometry(f.rt, f.rb, pt0.distanceTo(pt1));
+							obj = new THREE.Mesh(geometry, mat[f.m].m);
+							obj.position.set((pt0.x + pt1.x) / 2, (pt0.y + pt1.y) / 2, (pt0.z + pt1.z) / 2);
+							obj.rotation.set(Math.atan2(sub.z, Math.sqrt(sub.x * sub.x + sub.y * sub.y)), 0, Math.atan2(sub.y, sub.x) - Math.PI / 2, "ZXY");
+							obj.userData = userData;
+							scene.add(obj);
+							if (layer.q) queryableObjs.push(obj);
+							f.objs.push(obj);
+						}
+						pt0.copy(pt1);
+					}
+				});
+			}
+		}
+	}
+
+	function buildPolygonLayer(scene, layer) {
+		var f, polygon, boundary, pts, shape, geometry, obj;
+		for (var i = 0, l = layer.f.length; i < l; i++) {
+			// each feature in the layer
+			f = layer.f[i];
+			f.objs = [];
+			for (var j = 0, m = f.polygons.length; j < m; j++) {
+				polygon = f.polygons[j];
+				for (var k = 0, n = polygon.length; k < n; k++) {
+					boundary = polygon[k];
+					pts = [];
+					boundary.forEach(function(pt) {
+						pts.push(new THREE.Vector2(pt[0], pt[1]));
+					});
+					if (k == 0) {
+						shape = new THREE.Shape(pts);
+					} else {
+						shape.holes.push(new THREE.Path(pts));
+					}
+				}
+				geometry = new THREE.ExtrudeGeometry(shape, {bevelEnabled:false, amount:f.h});
+				obj = new THREE.Mesh(geometry, mat[f.m].m);
+				obj.position.z = f.zs[j];
+				obj.userData = [layer.index, i];
+				scene.add(obj);
+				if (layer.q) queryableObjs.push(obj);
+				f.objs.push(obj);
+			}
+		}
+	}
+
+	function buildLabels(scene) {
+		var f, pts, e, h, pt0, pt1, geometry;
+		var container = document.getElementById("webgl");
+		var line_mat = new THREE.LineBasicMaterial({color:option.label.pointerColor});
+		for (var i = 0, l = lyr.length; i < l; i++) {
+			var label = lyr[i].l;
+			if (label === undefined) continue;
+
+			for (var j = 0, m = lyr[i].f.length; j < m; j++) {
+				f = lyr[i].f[j];
+				if (lyr[i].type == "point") pts = f.pts;
+				else if (lyr[i].type == "polygon") pts = f.centroids;
+				else continue;
+
+				f.aElems = [];
+				f.aObjs = [];
+				pts.forEach(function (pt) {
+					// create div element for label
+					e = document.createElement("div");
+					e.appendChild(document.createTextNode(f.a[label.i]));
+					e.className = "label";
+					container.appendChild(e);
+
+					if (label.ht == 1) h = label.v;	// fixed height
+					else if (label.ht == 2) h = pt[2] + label.v;	// height from point / bottom
+					else if (label.ht == 3) h = pt[2] + f.h + label.v;	// height from top (extruded polygon)
+					else h = (f.a[label.ht - 100] + world.zShift) * world.zScale + label.v;	// data-defined + addend
+
+					pt0 = new THREE.Vector3(pt[0], pt[1], pt[2]);
+					pt1 = new THREE.Vector3(pt[0], pt[1], h);
+
+					// create pointer
+					geometry = new THREE.Geometry();
+					geometry.vertices.push(pt1);
+					geometry.vertices.push(pt0);
+					obj = new THREE.Line(geometry, line_mat);
+					obj.userData = [i, j];
+					scene.add(obj);
+
+					f.aElems.push(e);
+					f.aObjs.push(obj);
+
+					labels.push({e:e, obj:obj, pt:pt1, l:i, f:j});
+				});
+			}
+		}
+	}
+
+	
+	function build_plane(scene)
+	{
+		createMaterials();
+
+		for (var i = 0, l = lyr.length; i < l; i++) {
+			var layer = lyr[i];
+			layer.index = i;
+			if (layer.type == "dem") {
+				console.log("wireframe")
+				for (var j = 0, k = layer.dem.length; j < k; j++) {
+					buildDEM(scene, layer, layer.dem[j]);
+					layer.dem[j].aObjs = [];
+				}
+				console.log("wireframe done")
+			}
+		}
+	}
+
+	var sphere_1 = [];
+	var sphereGeometry_1 = [];
+	var sphereMaterial_1 = [];
+	var sphere_2 = [];
+	var sphereGeometry_2 = [];
+	var sphereMaterial_2 = [];
+	var sphere_3 = [];
+	var sphereGeometry_3 = [];
+	var sphereMaterial_3 = [];
+	var material_line = [];
+	var geometry_line = [];
+	var line = [];
+	var color_earth = 0xff0000;
+	// for(var i=0;i<earthquake_info.length;i++)
+	// {
+	// 	console.log('earth quake info')
+	// 	console.log(earthquake_info[i][4])
+	// 	if(earthquake_info[i][4]>-10)color_earth = 0xff0000;
+	// 	else if(earthquake_info[i][4]>-20&&earthquake_info[i][4]<=-10)color_earth=0xfdf504;
+	// 	else color_earth=0x39df42;
+	// 	sphereGeometry_1[i] = new THREE.SphereGeometry(earthquake_info[i][4]/3, 20, 20);
+	// 	sphereMaterial_1[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.4} );
+	// 	sphere_1[i] = new THREE.Mesh(sphereGeometry_1[i], sphereMaterial_1[i]);
+
+	// 	sphereGeometry_2[i] = new THREE.SphereGeometry(2*earthquake_info[i][4]/3, 20, 20);
+	// 	sphereMaterial_2[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.35} );
+	//  	sphere_2[i] = new THREE.Mesh(sphereGeometry_2[i], sphereMaterial_2[i]);
+
+	//  	sphereGeometry_3[i] = new THREE.SphereGeometry(earthquake_info[i][4], 20, 20);
+	//     sphereMaterial_3[i] = new THREE.MeshBasicMaterial( {color: color_earth, transparent: true, opacity: 0.15} );
+	// 	sphere_3[i] = new THREE.Mesh(sphereGeometry_3[i], sphereMaterial_3[i]);
+
+	// 	material_line[i] = new THREE.LineBasicMaterial({color:color_earth});
+	// 	geometry_line[i] = new THREE.Geometry();
+	// 	line[i] = new THREE.Line(geometry_line[i], material_line[i]);
+	// }
+	
+	function bulid_epicenter_obj_test(i){
+		//191105 
+		// console.log('earth quake info')
+		// console.log(earthquake_info[0])
+		// console.log(earthquake_info[1])
+		// console.log(earthquake_info[1][4])
+		// console.log(earthquake_info.length)
+
+		console.log("點位");
+		console.log(xy_val[0]);
+		console.log(xy_val[1]);
+		console.log(xy_val[2]);
+		console.log(xy_val[3]);
+		var len_x = Math.abs(xy_val[0] - xy_val[1]);
+		var len_y = Math.abs(xy_val[2] - xy_val[3]);
+		
+		var len_x1 = Math.abs(xy_val[0]-earthquake_info[i][2]);
+		var len_y1 = Math.abs(xy_val[3]-earthquake_info[i][3]);
+
+		var len_x_fin = (Math.abs(len_x1/len_x))*100.0;
+		var len_y_fin = (Math.abs(len_y1/len_y))*100.0;
+
+		//////
+
+		sphere_1[i].position.x = len_x_fin-50;
+		sphere_1[i].position.y = len_y_fin-50;
+		sphere_1[i].position.z = earthquake_info[i][4];
+		scene.add(sphere_1[i]);
+		tooltipEnabledObjects_earthquake.push(sphere_1[i]);//191028
+		
+		// sphere_2[i].position.x = len_x_fin-50;
+		// sphere_2[i].position.y = len_y_fin-50;
+		// sphere_2[i].position.z = earthquake_info[i][4];
+		// scene.add(sphere_2[i]);
+		
+		// sphere_3[i].position.x = len_x_fin-50;
+		// sphere_3[i].position.y = len_y_fin-50;
+		// sphere_3[i].position.z = earthquake_info[i][4];
+		// scene.add(sphere_3[i]);
+
+		geometry_line[i].vertices.push(new THREE.Vector3(len_x_fin-50,len_y_fin-50, earthquake_center_height[i]));
+		geometry_line[i].vertices.push(new THREE.Vector3(len_x_fin-50,len_y_fin-50, earthquake_info[i][4]));
+		line[i] = new THREE.Line(geometry_line[i], material_line[i]);
+		scene.add(line[i]);
+
+	}
+	
+	function buildModels(scene) {
+		
+		//build_plane(scene);
+		
+		createMaterials();
+
+		for (var i = 0, l = lyr.length; i < l; i++) {
+			var layer = lyr[i];
+			layer.index = i;
+			if (layer.type == "dem") {
+				console.log("build model");
+				for (var j = 0, k = layer.dem.length; j < k; j++) {
+					
+					buildDEM(scene, layer, layer.dem[j]);
+					layer.dem[j].aObjs = [];
+
+					// Build sides, bottom and frame
+					if (layer.dem[j].s !== undefined) buildSides(scene, layer.dem[j], option.side.color, option.sole_height);
+					if (layer.dem[j].frame) buildFrame(scene, layer.dem[j], option.frame.color, option.sole_height);
+				}
+				console.log("build model");
+			}
+			else if (layer.type == "point") {
+				if (layer.objType == "JSON model") buildJSONPointLayer(scene, layer);
+				else buildPointLayer(scene, layer);
+			}
+			else if (layer.type == "line") {
+				buildLineLayer(scene, layer);
+			}
+			else if (layer.type == "polygon") {
+				buildPolygonLayer(scene, layer);
+			}
+		}
+	
+		buildLabels(scene);
+		//build_other_obj();
+		//bulid_epicenter_obj();
+	}
+
+	// update label positions
+	function updateLabels() {
+		if (labels.length == 0 || !labelVisible) return;
+
+		var widthHalf = width / 2, heightHalf = height / 2;
+		var autosize = option.label.autoSize;
+
+		var c2t = controls.target.clone().sub(camera.position);
+		var c2l = new THREE.Vector3();
+		var v = new THREE.Vector3();
+
+		// make a list of [label index, distance to camera]
+		var idx_dist = [];
+		for (var i = 0, l = labels.length; i < l; i++) {
+			idx_dist.push([i, camera.position.distanceTo(labels[i].pt)]);
+		}
+
+		// sort label indexes in descending order of distances
+		idx_dist.sort(function(a, b){
+			if (a[1] < b[1]) return 1;
+			if (a[1] > b[1]) return -1;
+			return 0;
+		});
+
+		var label, e, x, y, dist, fontSize;
+		for (var i = 0, l = labels.length; i < l; i++) {
+			label = labels[idx_dist[i][0]];
+			e = label.e;
+			if (c2l.subVectors(label.pt, camera.position).dot(c2t) > 0) {
+				// label is in front
+				// calculate label position
+				projector.projectVector(v.copy(label.pt), camera);
+				x = (v.x * widthHalf) + widthHalf;
+				y = -(v.y * heightHalf) + heightHalf;
+
+				// set label position
+				e.style.display = "block";
+				e.style.left = (x - (e.offsetWidth / 2)) + "px";
+				e.style.top = (y - (e.offsetHeight / 2)) + "px";
+				e.style.zIndex = i + 1;
+
+				// set font size
+				if (autosize) {
+					dist = idx_dist[i][1];
+					if (dist < 10) dist = 10;
+					fontSize = Math.round(1000 / dist);
+					if (fontSize < 10) fontSize = 10;
+					e.style.fontSize = fontSize + "px";
+				}
+				else {
+					e.style.fontSize = option.label.fontSize;
+				}
+			}
+			else {
+				// label is in back
+				e.style.display = "none";
+			}
+		}
+	}
+
+	function toggleLabelVisibility() {
+		labelVisible = !labelVisible;
+		if (labels.length == 0) return;
+		labels.forEach(function (label) {
+			if (!labelVisible) label.e.style.display = "none";
+			label.obj.visible = labelVisible;
+		});
+	}
+
+	// Called from *Controls.js when canvas is clicked
+	function canvas_clicked(e) {
+		if (object_clicked === undefined) return;
+		var canvasOffset = offset(renderer.domElement);
+		var mx = e.clientX - canvasOffset.left;
+		var my = e.clientY - canvasOffset.top;
+		var x = (mx / width) * 2 - 1;
+		var y = -(my / height) * 2 + 1;
+		var vector = new THREE.Vector3(x, y, 1);
+		projector.unprojectVector(vector, camera);
+		var ray = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize())
+		var objs = ray.intersectObjects(queryableObjs);
+		if(objs.length > 0) object_clicked(objs);
+	}
+
+	function currentViewUrl() {
+		var c = controls.object.position, t = controls.target, u = controls.object.up;
+		var hash = "#cx=" + c.x + "&cy=" + c.y + "&cz=" + c.z;
+		if (t.x || t.y || t.z) hash += "&tx=" + t.x + "&ty=" + t.y + "&tz=" + t.z;
+		if (u && (u.x || u.y || u.z != 1)) hash += "&ux=" + u.x + "&uy=" + u.y + "&uz=" + u.z;
+		return window.location.href.split("#")[0] + hash;
+	}
+
+	function offset(elm) {
+		var top = left = 0;
+		do {
+			top += elm.offsetTop || 0; left += elm.offsetLeft || 0; elm = elm.offsetParent;
+		} while(elm);
+		return {top: top, left: left};
+	}
+
+	function parseParams() {
+		var p, vars = {};
+		window.location.search.substring(1).split('&').forEach(function (param) {
+			p = param.split('=');
+			vars[p[0]] = p[1];
+		});
+		window.location.hash.substring(1).split('&').forEach(function (param) {
+			p = param.split('=');
+			vars[p[0]] = p[1];
+		});
+		return vars;
+	}
+
+	// Restore camera position and target position
+	function restoreView(controls, vars) {
+		if (vars === undefined) return;
+		if (vars.tx !== undefined) controls.target.set(vars.tx, vars.ty, vars.tz);
+		if (vars.cx !== undefined) controls.object.position.set(vars.cx, vars.cy, vars.cz);
+		if (vars.ux !== undefined) controls.object.up.set(vars.ux, vars.uy, vars.uz);
+	}
+
+
+	var container = document.getElementById('webgl');
+	var width = window.innerWidth, height = window.innerHeight;
+
+	  // parse URL parameters
+	var vars = parseParams();
+
+	if ("popup" in vars) {
+		// open popup window
+		var c = window.location.href.split("?");
+		window.open(c[0] + "?" + c[1].replace(/&?popup/, ""), "popup", "width=" + vars.width + ",height=" + vars.height);
+	}
+	if (vars.width && vars.height) {
+		// set canvas size
+		container.style.width = vars.width + "px";
+		container.style.height = vars.height + "px";
+		width = vars.width;
+		height = vars.height;
+	}
+
+	var renderer = new THREE.WebGLRenderer({antialias: true, alpha: (option.bgcolor === undefined)});
+	renderer.setSize(width, height);
+	renderer.setClearColor(option.bgcolor || 0, (option.bgcolor === undefined) ? 0 : 1);
+
+	var scene = new THREE.Scene();
+
+	// light
+	scene.add(new THREE.AmbientLight(0x999999));
+	var light = new THREE.DirectionalLight(0xffffff, 0.4);
+	light.position.set(-0.1, -0.3, 1);
+	scene.add(light);
+
+	// camera and controls
+	var camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+	camera.position.set(0, -100, 100);
+
+	var controls = createControls(camera, renderer.domElement);
+	restoreView(controls, vars);
+
+	addDefaultKeyEventListener();
+
+	// marker at queried point
+	var queryMarker = new THREE.Mesh(new THREE.SphereGeometry(option.qmarker.r),
+									   new THREE.MeshLambertMaterial({color: option.qmarker.c, ambient: option.qmarker.c, opacity: option.qmarker.o, transparent: (option.qmarker.o < 1)}));
+	queryMarker.visible = false;
+	scene.add(queryMarker);
+	
+	//mouse click event
+	var click_flag = 0; //0: close / 1: open
+	
+	function showTooltip() {
+		console.log("show");
+		var divElement = $("#tooltip");
+		if (divElement && latestMouseProjection){
+			divElement.css({
+				display: "block",
+				opacity: 0.0
+			});
+			var canvasHalfWidth = renderer.domElement.offsetWidth / 2;
+			var canvasHalfHeight = renderer.domElement.offsetHeight / 2;
+			
+			var tooltipPosition = new THREE.Vector3();
+			
+			tooltipPosition.x = latestMouseProjection.x + canvasHalfWidth +280;
+			tooltipPosition.y = -latestMouseProjection.y + canvasHalfHeight + 200;
+			
+			var tootipWidth = divElement[0].offsetWidth;
+			var tootipHeight = divElement[0].offsetHeight;
+			
+			divElement.css({
+				left: `${tooltipPosition.x - tootipWidth/2}px`,
+				top: `${tooltipPosition.y - tootipHeight-5}px`
+			});
+			
+			//change text
+			/*
+			for(var i = 0; i < object_num ; i++){
+				temp_obj_array[i] = tooltipEnabledObjects[i];
+			}
+			var intersects_drill = raycaster.intersectObjects(planets, true); //array
+			if (intersects_drill.length > 0) {
+				selectedObject = intersects_drill[0];
+				//alert(selectedObject);
+				console.log();
+			}
+			*/
+			if(wall_on==1)
+			{
+				for(var i = 0; i < tooltipEnabledObjects_drillhole.length; i++)
+				{
+					if(hoveredObj.uuid == tooltipEnabledObjects_drillhole[i].uuid){
+						document.getElementById("tooltip").innerHTML = drillhole_info[i][0];
+						console.log()
+					}
+				}
+			}
+			console.log(tooltipEnabledObjects_earthquake.length);
+			if(earthquake_on == 1)
+			{
+				for(var i = 0; i < tooltipEnabledObjects_earthquake.length; i++)
+				{
+					console.log(hoveredObj.uuid,tooltipEnabledObjects_earthquake[i].uuid);
+					if(hoveredObj.uuid == tooltipEnabledObjects_earthquake[i].uuid){
+						var showinformation = "地震編號：";
+						//showinformation.push("地震編號：");
+						//showinformation.push("震央位置(lon):"+earthquake_info[i][2]);
+						//showinformation.push("震央位置(lat):"+earthquake_info[i][3]);
+						//showinformation.push("地震深度："+(earthquake_info[i][4]));
+						//showinformation.push("芮氏規模："+earthquake_info[i][5]);
+						//showinformation.push("地址："+earthquake_info[i][6]);
+						console.log("show it");
+						console.log(showinformation);
+						document.getElementById("tooltip").innerHTML = showinformation;
+					}
+				}
+			}
+
+			setTimeout(function() {
+				divElement.css({
+					opacity: 1.0
+				});
+			}, 25);
+		}
+	}
+	function hideTooltip() {
+		console.log("hide");
+		var divElement = $("#tooltip");
+		if (divElement) {
+			divElement.css({
+				display: "none"
+			});
+		}
+	}
+	function updateMouseCoords(event, coordsObj) {
+		coordsObj.x = ((event.clientX - renderer.domElement.offsetLeft + 0.5) / window.innerWidth) * 2 - 1;
+		coordsObj.y = -((event.clientY - renderer.domElement.offsetTop + 0.5) / window.innerHeight) * 2 + 1;
+	}
+	
+	var intersects_drill;
+	var intersects_earth;
+	function handleManipulationUpdate(e) {
+		
+		var object_num = localStorage.getItem("object_num");
+		
+		//camera.position, vector.sub(camera.position).normalize()
+		
+		var canvasOffset = offset(renderer.domElement);
+		var mx = e.clientX - canvasOffset.left;
+		var my = e.clientY - canvasOffset.top;
+		var x = (mx / width) * 2 - 1;
+		var y = -(my / height) * 2 + 1;
+		var vector = new THREE.Vector3(x, y, 1);
+		projector.unprojectVector(vector, camera);    
+		var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+		//raycaster.setFromCamera(mouse, camera); {
+		
+		intersects_drill = raycaster.intersectObjects(tooltipEnabledObjects_drillhole);
+		intersects_earth = raycaster.intersectObjects(tooltipEnabledObjects_earthquake);//
+		
+		if (intersects_drill.length > 0 && intersects_earth.length <= 0) {
+			latestMouseProjection = intersects_drill[0].point;
+			hoveredObj = intersects_drill[0].object;
+		}
+		//191028
+		else if (intersects_earth.length > 0 && intersects_drill.length <= 0) {
+			latestMouseProjection = intersects_earth[0].point;
+			hoveredObj = intersects_earth[0].object;
+		}
+		/////////////////////
+		
+		//}	
+		if ((tooltipDisplayTimeout || !latestMouseProjection) && (click_flag == 0)) {
+			clearTimeout(tooltipDisplayTimeout);
+			tooltipDisplayTimeout = undefined;
+			hideTooltip();
+		}
+		if (!tooltipDisplayTimeout && latestMouseProjection || (click_flag == 1)) {
+			tooltipDisplayTimeout = setTimeout(function() {
+				tooltipDisplayTimeout = undefined;
+				showTooltip();
+			}, 330);
+		}
+    }
+	
+	//*******************//
+	
+	function handleManipulationUpdate_click(e) {
+		var canvasOffset = offset(renderer.domElement);
+		var mx = e.clientX - canvasOffset.left;
+		var my = e.clientY - canvasOffset.top;
+		var x = (mx / width) * 2 - 1;
+		var y = -(my / height) * 2 + 1;
+		var vector = new THREE.Vector3(x, y, 1);
+		projector.unprojectVector(vector, camera);
+		var raycaster = new THREE.Raycaster(camera.position, vector.sub(camera.position).normalize());
+		//raycaster.setFromCamera(mouse, camera); {
+		
+		intersects_drill = raycaster.intersectObjects(tooltipEnabledObjects_drillhole);
+		intersects_earth = raycaster.intersectObjects(tooltipEnabledObjects_earthquake);
+
+		if(intersects_drill.length > 0 && intersects_earth.length <= 0){
+			latestMouseProjection = intersects_drill[0].point;
+			hoveredObj = intersects_drill[0].object;
+			//click_flag = 0; //0: close / 1: open
+			if(click_flag == 0){ click_flag = 1;}
+			else{click_flag = 0;}
+			
+			//console.log("click:",click_flag);
+		}
+		//191028
+		else if (intersects_earth.length > 0 && intersects_drill.length <= 0) {
+			latestMouseProjection = intersects_earth[0].point;
+			hoveredObj = intersects_earth[0].object;
+			if(click_flag == 0){ click_flag = 1;}
+			else{click_flag = 0;}
+		}
+		//////////////////
+		console.log(click_flag);
+		if(click_flag == 0){ // close
+			hideTooltip();
+		}
+		else{
+			showTooltip();
+		}
+	}
+	
+	function onMouseMove(event) {
+		updateMouseCoords(event, mouse);
+		latestMouseProjection = undefined;
+		hoveredObj = undefined;
+		handleManipulationUpdate(event);
+	}
+	
+	//***************//
+	
+	function onMouseClick(event){
+		updateMouseCoords(event, mouse);
+		latestMouseProjection = undefined;
+		hoveredObj = undefined;
+		handleManipulationUpdate_click(event);
+	}
+
+	window.addEventListener('mousemove', onMouseMove, false);
+	
+	//190812 add mouse click event
+	window.addEventListener('mousedown', onMouseClick, false);
+	
+	render();
+	
+	//190921
+	function clear_other_obj(i){
+		scene.remove(cylinder[i]);
+	}
+	
+	//191115
+	function clear_epicenter_obj_test(i){
+		scene.remove(sphere_1[i]);
+		scene.remove(sphere_2[i]);
+		scene.remove(sphere_3[i]);
+		scene.remove(line[i]);	
+	}
+
+	//cylinder
+	var meshMaterial = [];
+	var cylinder = [];
+	var cylinderGeometry;
+	for(var i=0;i<drillhole_info.length;i++)
+	{
+		meshMaterial[i] = new THREE.MeshBasicMaterial( {color: Math.random() * 0xffffff, transparent: true, opacity: 0.45});
+		cylinderGeometry = new THREE.CylinderGeometry(0.3, 0.3, drillhole_info[i][4], 32);
+		cylinder[i] = new THREE.Mesh(cylinderGeometry, meshMaterial[i]);
+	}
+	
+	/////////////////////////////////////
+	//設立鑽井孔實體
+	function build_other_obj(i) {
+
+		cylinder[i].rotation.x = Math.PI/2;
+		var len_x = Math.abs(xy_val[0] - xy_val[1]);
+		var len_y = Math.abs(xy_val[2] - xy_val[3]);
+		
+		var len_x1 = Math.abs(xy_val[0]-drillhole_info[i][1]);
+		var len_y1 = Math.abs(xy_val[3]-drillhole_info[i][2]);
+
+		var len_x_fin = (Math.abs(len_x1/len_x))*100.0;
+		var len_y_fin = (Math.abs(len_y1/len_y))*100.0;
+
+		cylinder[i].position.x = len_x_fin-50;
+		cylinder[i].position.y = len_y_fin-50;
+
+		cylinder[i].position.z = drillhole_info[i][3];
+		scene.add(cylinder[i]);
+		tooltipEnabledObjects_drillhole.push(cylinder[i]);
+
+
+		localStorage.setItem("object_num",tooltipEnabledObjects_drillhole.length);		
+	}
+	
+	
+	function render() {
+		controls.update();
+		requestAnimationFrame(render);
+		renderer.render(scene, camera);
+		updateLabels();
+	 }
+
+	function object_clicked(objs) {
+		var obj = objs[0];
+		queryMarker.position.set(obj.point.x, obj.point.y, obj.point.z);
+		queryMarker.visible = true;
+		var object = obj.object;
+		var pt = world.toMapCoordinates(obj.point.x, obj.point.y, obj.point.z);
+		var r = [];
+		r.push("Clicked coordinates");
+		r.push(" X: " + pt.x.toFixed(2));
+		r.push(" Y: " + pt.y.toFixed(2));
+		r.push(" Z: " + pt.z.toFixed(2));
+		//var coord_info = [];
+		//coord_info.puch(pt.x.toFixed(2) + ", " + pt.y.toFixed(2));
+		//191029
+		document.getElementById("Cursor_Coord").innerHTML = pt.x.toFixed(2) + ", " + +pt.y.toFixed(2);
+		/////////////
+		/*
+		if (object.userData !== undefined) {
+			var layer = lyr[object.userData[0]];
+			r.push("");
+			r.push("Layer: " + layer.name);
+
+			if (layer.type != "dem") {
+				var f = layer.f[object.userData[1]];
+					if (f.a !== undefined) {
+						for (var i = 0, l = f.a.length; i < l; i++) {
+							r.push(layer.a[i] + ": " + f.a[i]);
+						}
+					}
+				}
+		}
+		*/
+		document.getElementById("queryresult").innerHTML = r.join("<br>");
+		document.getElementById("queryresult").style.display = "block";
+		document.getElementById("pageinfo").style.display = "none";
+		document.getElementById("popup").style.display = "block";
+	}
+	
+	</script>
+	<div id="tooltip">"123"</div>
+	
+	<div id="popup" style="display:none;"><div id="popupbar"><span id="closebtn">X</span></div><div id="popupcontent">
+		<button id = "wf_btn">wireframe on</button>
+		<button id = "side_btn">side off</button>
+		<button id = "url_btn">get terrian data</button>
+		<button id = "model_btn">bulid model</button>
+		<p class="text">Replace me!!</p>
+	<div id="queryresult"></div>
+	<div id="pageinfo">
+		<hr>
+		<h1>Infomation:</h1>
+		<div id="info"></div>
+		<hr>
+		<h1>Help:</h1>
+		<div id="usage"></div>
+		<hr>
+		</div></div></div>
+			<div id="Cursor_Coord" style="bottom:5px;left:50px; height:20px;width:200px;text-align:center; "></div>
+			<div id="footer"><div id="infobtn">i</div></div>
+			
+	<div id="floatingCirclesG">
+		<div class="f_circleG" id="frotateG_01"></div>
+		<div class="f_circleG" id="frotateG_02"></div>
+		<div class="f_circleG" id="frotateG_03"></div>
+		<div class="f_circleG" id="frotateG_04"></div>
+		<div class="f_circleG" id="frotateG_05"></div>
+		<div class="f_circleG" id="frotateG_06"></div>
+		<div class="f_circleG" id="frotateG_07"></div>
+		<div class="f_circleG" id="frotateG_08"></div>
+	</div>
+	
+		<!----------190923---------->
+	<div id="menu_slider_scroll">
+		<div id="menu_tab">
+			<span>◄</span>
+			<span>輔</span>
+			<span>助</span>     
+			<span>選</span>
+			<span>單</span>  	
+		</div>
+		<div id="menu_slider_content">
+			<div class='content'> 
+				<div class = "field">
+				
+					<font size="5" color="black" style="visibility:hidden">&nbsp;&ensp;鑽井資料</font>
+					<button id="wall_data_button" class = "ui button" style="visibility:hidden">開啟鑽探資料</button>
+					
+					<font size="5" color="black" style="visibility:hidden">&nbsp;&ensp;地震資料</font>
+					<button id="earthquake_data_button" class = "ui button" >開啟地震資料</button>
+					
+					<hr>
+					<font size="5" color="black" >&nbsp;&ensp;視覺效果</font>
+					<font size="2" color="black">&nbsp;&ensp;(請先關閉底座，再調整地形高度倍率)</font>
+					<button id="side_button" class = "ui button">關閉底座</button>
+					<input type="range" min="0" max="5" value="1" step = "0.1" class="slider" id="myRange">
+					<font size="3" color="black" id = "val_z">&nbsp;&ensp;高度倍率：1.0</font>
+					<button id="wireframe_button" class = "ui button">開啟網格</button>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-------------------------->
+
+	</body>
+	
+</html>
