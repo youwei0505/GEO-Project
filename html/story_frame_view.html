@@ -1,0 +1,91 @@
+<html>
+
+<head>
+	<meta charset="utf-8" />
+	<style>
+		#story_frame_view_carousel_slider .carousel-indicators li {
+			border: 2px solid #182c39;
+			background-color: #fff;
+			height: 10px;
+			width: 10px;
+			border-radius: 50%;
+		}
+
+		#story_frame_view_carousel_slider .carousel-indicators li.active {
+			border-color: #fff;
+			background-color: #182c39;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="card">
+		<h5 class="card-header">
+			<p><span id="story_frame_view_topic">主題：</span></p>
+			<p><span id="story_frame_view_staff">製作人員：</span></p>
+			<!-- <button type="button" class="close pull-right" aria-label="Close" onclick="alert('close');">
+				<span aria-hidden="true">&times;</span>
+			</button> -->
+		</h5>
+
+		<div class="card-body">
+			<div id="story_frame_view_carousel_slider">
+				<div id="story_frame_view_myCarousel" class="carousel slide" data-ride="carousel" data-interval="false">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col" width="5%">
+									<button id="story_frame_view_carousel_location" class="btn btn-xs btn-link">
+										<i class="fa fa-map-marker"></i>
+									</button>
+								</th>
+								<th scope="col" id="story_frame_view_carousel_title" width="20%">標題</th>
+								<th scope="col" width="70%">
+									<!-- Indicators -->
+									<ul class="carousel-indicators" style="position: static; float: right" id="story_frame_view_content_list">
+										<li data-target="#story_frame_view_myCarousel" data-slide-to="0" class="active"></li>
+										<li data-target="#story_frame_view_myCarousel" data-slide-to="1"></li>
+									</ul>
+								</th>
+								<th scope="col" width="5%">
+									<!-- <button id="btn_edit_slider" class="btn btn-xs btn-link" data-edit_index="0"
+										onclick="edit_slider(this);">
+										<i class="fa fa-pencil-square-o" aria-hidden="true"></i>
+									</button> -->
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td style="vertical-align: middle; cursor: pointer"
+									onclick='document.getElementById("story_frame_view_prev").click();'>
+									<i class="fa fa-angle-left"></i>
+								</td>
+								<td colspan="2">
+									<div class="carousel-inner" role="listbox" id="story_frame_view_content"
+										style="height: 100%; overflow-y:scroll;">
+									</div>
+									<!-- Left and right controls -->
+									<a id="story_frame_view_prev" class="carousel-control-prev" href="#story_frame_view_myCarousel" data-slide="prev"
+										style="display: none">
+										<span class="carousel-control-prev-icon"></span>
+									</a>
+									<a id="story_frame_view_next" class="carousel-control-next" href="#story_frame_view_myCarousel" data-slide="next"
+										style="display: none">
+										<span class="carousel-control-next-icon"></span>
+									</a>
+								</td>
+								<td style="vertical-align: middle; cursor: pointer"
+									onclick='document.getElementById("story_frame_view_next").click();'>
+									<i class="fa fa-angle-right"></i>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+
+</html>

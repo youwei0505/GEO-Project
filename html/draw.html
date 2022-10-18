@@ -1,0 +1,1564 @@
+<html style="height: 100%;">
+
+<body style="height: 100%;">
+
+	<style>
+		.menu_hide {
+			display: none;
+		}
+
+		.hide {
+			display: none;
+		}
+	</style>
+
+	<div style="height: 100%;">
+
+		<!-- 20190515 fixed -->
+		<div id='mainDraw' class='ui styled accordion' style="width:100%;height:100%;overflow:auto;">
+			<!-- 20190515 fixed -->
+
+			<div class="ui three item menu">
+				<a class="item active" id="toolItem1">地圖輔助工具</a>
+				<a class="item" id="toolItem2">加值應用與分析工具</a>
+				<a class="item" id="toolItem3">繪圖與分享工具</a>
+			</div>
+
+
+			<div id='otherAPIs'>
+				<div id="Sup_1_1" class='title'>
+					<i class='dropdown icon'></i>地圖輔助線(方位線與等距圈)
+				</div>
+				<div class='content'>
+					<div id="vue_toukyoken_houiline">
+						<!-- @access-toukyoken是 $emit 綁定的事件名稱, 事件命名不能為大寫, 要用-隔開 , html不分大小寫-->
+						<!-- fun_access_log 是父層的 methods -->
+						<toukyoken_houiline ref="toukyokenforoutside" @access-toukyoken="fun_access_log" :maps="maps"
+							:map_ind="map_ind" ></toukyoken_houiline>
+					</div>
+				</div>
+				<div id="Sup_1_2" class='title'>
+					<i class='dropdown icon'></i>地圖中心十字線
+				</div>
+				<div class='content'>
+					<div class="ui toggle checkbox" id="map_center_cb">
+						<input type="checkbox" id="map_center_checked">
+						<label>開啟</label>
+					</div>
+					<br>
+				</div>
+
+				<!-- add 20190417 -->
+				<div class='title' style="display:none">
+					<i class='dropdown icon'></i>底圖滑動比對
+				</div>
+				<div class='content' style="display:none">
+					<div class="ui toggle checkbox" id="map_slider_cb">
+						<input type="checkbox" id="map_slider_checked">
+						<label>開啟</label>
+					</div>
+
+				</div>
+				<!------------->
+				<!---  20190330 fixed --->
+				<div id="Sup_1_3" class='title'>
+					<!--style="display:none">-->
+					<i class='dropdown icon'></i>外部向量資料匯入
+				</div>
+				<div class='content'>
+					<div class="ui form">
+						<div class="six wide field">
+							<label>上傳檔案 3mb以內 </br>(支援KML、SHP..)</label>
+							<a href="vector_type.html" target="_blank" title="詳細支援格式請參考">支援格式與坐標系統說明</a>
+							<div class="ui action file input">
+								<input id="upload_togeojson_text" type="text" readonly placeholder="選擇檔案">
+								<input id="upload_togeojson" type="file" style="display:none"><br>
+								<label for="upload_togeojson" class="ui icon button">
+									<i class="attach icon"></i>
+								</label>
+							</div>
+						</div>
+						<div class="fields">
+							<div class="field">
+								<button id="btn_togeojson" class="ui button">顯示</button>
+							</div>
+							<div class="field">
+								<button id="btn_downloadgeoj" class="ui button">下載 json 檔</button>
+							</div>
+							<!--div class = "field">
+								<button id="btn_downloadkml" class = "ui button">下載 kml 檔</button>
+							</div-->
+							<!--div class = "field">
+						<button id="btn_fromgeojson" class = "ui button">下載 shape 檔</button>
+					</div-->
+						</div>
+					</div>
+					<br>
+					<div id='treeBox_geoj' style='width:100%;height:200;'></div>
+				</div>
+				<!---  20190330 fixed --->
+				<!--div id ="Location_1_5" class='title'> 
+			<i class='dropdown icon'></i>地號定位查詢
+		</div> 
+		<div class='content'> 
+			<select id='county'></select> 
+			<select id='town'> </select> 
+			<br> 
+			<br> 
+			<select id='sect'> </select> 
+			<br>
+			<br>
+			地號:   <input id='cadas'> </input>
+			<br>
+			<br>
+			<button id='load_pos_by_cadas'> 定位 </button>
+			<button id='clear_load_pos'> clear </button>
+		</div-->
+				<div id="Location_1_6" class='title'>
+					<i class='dropdown icon'></i>地號及土地利用查詢
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='qrytile_button'><img src='img/paint02.png' alt=''></a>
+						<button class='ui button' onclick='clear_qrytile()'> clear </button>
+					</div>
+					<table border="1">
+						<tr>
+							<th>&ensp;類型&ensp;</th>
+							<th>&ensp;資料&ensp;</th>
+						</tr>
+						<tr>
+							<td>&ensp;縣市&ensp;</td>
+							<td id="qrycity"></td>
+						</tr>
+						<tr>
+							<td>&ensp;行政區&ensp;</td>
+							<td id="qrytown"></td>
+						</tr>
+						<tr>
+							<td>&ensp;地所號&ensp;</td>
+							<td id="qrydcode"></td>
+						</tr>
+						<tr>
+							<td>&ensp;地段號&ensp;</td>
+							<td id="qryscode"></td>
+						</tr>
+						<tr>
+							<td>&ensp;地號&ensp;</td>
+							<td id="qrydicode"></td>
+						</tr>
+						<tr>
+							<td>&ensp;面積&ensp;</td>
+							<td id="qryarea"></td>
+						</tr>
+						<tr>
+							<td>&ensp;土地調查年份&ensp;</td>
+							<td id="qryyear"></td>
+						</tr>
+						<tr>
+							<td>&ensp;類別代碼_分類1&ensp;</td>
+							<td id="qryLcode_C1"></td>
+						</tr>
+						<tr>
+							<td>&ensp;類別代碼_分類2&ensp;</td>
+							<td id="qryLcode_C2"></td>
+						</tr>
+						<tr>
+							<td>&ensp;類別代碼_分類3&ensp;</td>
+							<td id="qryLcode_C3"></td>
+						</tr>
+						<tr>
+							<td>&ensp;類別代碼&ensp;</td>
+							<td id="qryLCODE"></td>
+						</tr>
+						<tr>
+							<td>&ensp;類別名稱&ensp;</td>
+							<td id="qryNAME"></td>
+						</tr>
+					</table>
+					<br>
+					<p id="loadcity_owner">所有權人:</p>
+				</div>
+
+				<!-- 1007 fixed -->
+				<div id="Sup_1_4" class='title'>
+					<i class='dropdown icon'></i>扇形工具
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' id='polygon_curve_button'><img src='img/paint02.png' alt='重新定位中心點'>重新定位圓心點</a>
+					</div>
+					<form class='ui form'>
+						<div class='eight wide field'>
+							<label>圓心點坐標</label>
+							<input id='polygon_curve_pos' value='120.63448,24.1534566'></input>
+						</div>
+						<div class='field'>
+							<label>半徑(m)</label>
+							<input id='polygon_curve_radius' type='text' placeholder='radius' value='1000'>
+						</div>
+						<div class='field'>
+							<label>起始邊(度)</label>
+							<input id='polygon_curve_angles' type='text' placeholder='angles' value='90'>
+						</div>
+						<div class='field'>
+							<label>圓心角(度)</label>
+							<input id='polygon_curve_rotation' type='text' placeholder='rotation' value='30'>
+						</div>
+						<div class='field'>
+							<div class="ui toggle checkbox" id="map_polygon_curve_cb">
+								<input type="checkbox" id="map_polygon_curve_checked">
+								<label>開啟</label>
+							</div>
+						</div>
+					</form>
+				</div>
+				<!-- 1007 fixed -->
+
+
+				<!-- 20200813 地震顯示叢集功能 -->
+				<div id="Sup_1_5" class='title'>
+					<i class='dropdown icon'></i>地震資訊查詢
+				</div>
+				<div class='content'>
+					<span class="label">設定查詢時間範圍</span><br>
+					<form name="form1" method="post" action="">
+						<span class="label">起始時間</span> <input type="text" id="earthquake_date_from"
+							readonly="true"><span><img id="earthquake_calendar_icon_S" src="img/calendar.png"
+								onclick="Search_earthquake_In_Calendar_setSens('earthquake_date_to', 'max')"></span><br>
+						<span class="label">結束時間</span> <input type="text" id="earthquake_date_to"
+							readonly="true"><span><img id="earthquake_calendar_icon_E" src="img/calendar.png"
+								onclick="Search_earthquake_In_Calendar_setSens('earthquake_date_from', 'min')"></span><br>
+
+						<!-- <input type="radio" name="space_sel" id="earthquake_space_lonlat" value="earthquake_space_lonlat"> -->
+						<span class="label">地圖框選範圍</span><br>
+						<button type="button" name="button" value="地圖框選" onclick="earthquake_box_select()">地圖框選</button>
+						<button type="button" class="ui button" onclick="clear_map()"> clear </button>
+						<div class="ui toggle checkbox" id="earthquake_hide_checkbox">
+							<input type="checkbox" id="display_earthquake_checked">
+							<label id="earthquake_checkbox_label">開啟地震叢集</label>
+						</div>
+						<br>
+						<span class="label">左上坐標：<br>X坐標: <input type="text" size="15" ;
+								id="Search_earthquake_In_drawbox_LU_X" value="120.39779663085939">&nbsp;&nbsp;&nbsp;Y坐標:
+							<input type="text" size="15" ; id="Search_earthquake_In_drawbox_LU_Y"
+								value="22.960290070337322"></span><br>
+						<span class="label">右下坐標：<br>X坐標: <input type="text" size="15" ;
+								id="Search_earthquake_In_drawbox_RD_X" value="120.42182922363281">&nbsp;&nbsp;&nbsp;Y坐標:
+							<input type="text" size="15" ; id="Search_earthquake_In_drawbox_RD_Y"
+								value="22.945115307629337"></span>
+						<br>
+						<label><input type="checkbox" value="active_earthquake" id="active_earthquake"
+								checked="checked"> 地震活動 </label>
+						<label><input type="checkbox" value="history_earthquake" id="history_earthquake"
+								checked="checked"> 歷史地震 </label>
+						<br>
+						<p id="bidirection_slider_saerch_depth" style="display:block">
+							深度搜尋 Min: <span id="search_depth_L"> </span>
+							Max: <span id="search_depth_H"> </span>
+						</p>
+						<div id="slider_depth" style="width:200px;"></div>
+						<br>
+						<p id="bidirection_slider_saerch_mag" style="display:block">
+							規模搜尋 Min: <span id="search_mag_L"> </span>
+							Max: <span id="search_mag_H"> </span>
+						</p>
+						<div id="slider_mag" style="width:200px;"></div>
+						<br>
+
+						<HR>
+						<button type="button" value="確認查詢" onclick="search_earthquake()">確認查詢</button>
+						<input id="show_earthquake_cluster_btn" type="button" value="隱藏叢集" disabled>
+						<button type="button" value="3D地震顯示" onclick="open_3dlayer('earthquake');">3D地震顯示</button>
+						<!-- <button type="button" value="3D地震顯示" onclick="open_earthquake3d()">3D地震顯示</button> -->
+						<br><br>
+						<p id="bidirection_slider" style="display:none">
+							規模大小 Min: <span id="hslider_value_L"> </span>
+							Max: <span id="hslider_value_H"> </span>
+						</p>
+						<div id="hslider" style="width:200px; display:none"></div>
+						<br>
+						<p id="bidirection_slider_time" style="display:none">
+							時間 From: <span id="hslider_value_L_time"> </span>
+							To: <span id="hslider_value_H_time"> </span>
+						</p>
+						<div id="hslider_time" style="width:200px; display:none"></div>
+					</form>
+				</div>
+
+
+				<!-- 20200813 鑽探顯示叢集功能 -->
+				<div id="Sup_1_6" class='title'>
+					<i class='dropdown icon'></i>鑽探資訊查詢
+				</div>
+				<div class='content'>
+					<span class="label">設定查詢時間範圍</span><br>
+					<form name="form1" method="post" action="">
+						<span class="label">起始時間</span> <input type="text" id="wall_date_from"
+							readonly="true"><span><img id="wall_calendar_icon_S" src="img/calendar.png"
+								onclick="Search_wall_In_Calendar_setSens('wall_date_to', 'max')"></span><br>
+						<span class="label">結束時間</span> <input type="text" id="wall_date_to" readonly="true"><span><img
+								id="wall_calendar_icon_E" src="img/calendar.png"
+								onclick="Search_wall_In_Calendar_setSens('wall_date_from', 'min')"></span><br>
+
+						<!-- <input type="radio" name="space_sel" id="earthquake_space_lonlat" value="earthquake_space_lonlat"> -->
+						<span class="label">地圖框選範圍</span><br>
+						<button type="button" name="button" value="地圖框選" onclick="wall_box_select()">地圖框選</button>
+						<button type="button" class="ui button" onclick="clear_map()"> clear </button><br>
+						<span class="label">左上坐標：<br>X坐標: <input type="text" size="15" ;
+								id="Search_wall_In_drawbox_LU_X" value="120.39779663085939">&nbsp;&nbsp;&nbsp;Y坐標:
+							<input type="text" size="15" ; id="Search_wall_In_drawbox_LU_Y"
+								value="22.960290070337322"></span><br>
+						<span class="label">右下坐標：<br>X坐標: <input type="text" size="15" ;
+								id="Search_wall_In_drawbox_RD_X" value="120.42182922363281">&nbsp;&nbsp;&nbsp;Y坐標:
+							<input type="text" size="15" ; id="Search_wall_In_drawbox_RD_Y"
+								value="22.945115307629337"></span><br>
+						<HR>
+						<button type="button" value="確認查詢" onclick="search_wall()">確認查詢</button>
+						<input id="show_wall_cluster_btn" type="button" value="隱藏叢集" disabled>
+						<button type="button" value="3D鑽井顯示" onclick="open_3dlayer('wall');">3D鑽井顯示</button>
+						<!-- <button type="button" value="3D鑽井顯示" onclick="open_wall3d()">3D鑽井顯示</button> -->
+						<!-- <input id="show_wall_cluster_btn" type="button" value="隱藏叢集" disabled> -->
+						<br><br>
+						<p id="wall_slider_time" style="display:none">
+							時間 From: <span id="wall_time_L"> </span>
+							To: <span id="wall_time_H"> </span>
+						</p>
+						<div id="wall_time" style="width:200px; display:none"></div>
+					</form>
+				</div>
+
+				<!-- 20210305 上傳自訂影像疊加 -->
+				<div id="Sup_1_7" class='title' style="display">
+					<i class='dropdown icon'></i>上傳自訂影像疊加功能
+				</div>
+				<div class='content'>
+					<label>上傳檔案 10mb以內 <br> (支援png、jpg)</label><br>
+
+					<p id="image_stretch_opacity"  >
+						透明度: <span id="image_opacity"></span> %
+					</p>
+					<div id="slider_opacity" style="width:200px"></div>
+					<br>
+					<input id="user_image" data_target="user_image" type="file" accept="image/*">
+					<br><br>
+					<button id='upload_image_button' type="button" name="button" value="地圖框選"
+						onclick="upload_image()">新增圖片</button>
+					<br>
+					<button id='reset_image_button' type="button" name="button" onclick="reset_image()">重設</button>
+				</div>
+			</div>
+
+
+
+
+			<div id='LandAPIs'>
+				<div id='sentinel_block'>
+					<div id="Analysis_1_1" class='title' style="display:none">
+						<i class='dropdown icon'></i>Sentinel-2單期影像數化分析(分析區域：陸地區域)
+					</div>
+					<div class='content'>
+						<div id=vue_sentinel2_api>
+							<Sentinel2_api @access-toukyoken="fun_access_log"
+							:maps="maps"
+							:map_ind="map_ind"
+							ref="sentinel2_api">
+							</Sentinel2_api>
+						</div>
+		<!-- 			<div class='content'>
+						<div class='ui secondary menu'>
+							<a class='item' id = 'sentinel_poly_button'><img src='img/paint03.png' alt=''></a>  
+							<button class = 'ui button' onclick = 'clear_sentinel2_region()'> clear </button>
+						</div>
+						<div class='ui form'>
+							<div class='fields'>
+								<div class='field'>
+									<select id="sentinel2_list"><!-- class="ui dropdown" style="width:300px;"
+									</select>
+								</div>
+							</div>
+							<div class="ui toggle checkbox"  id = "sentinel_cb">
+								<input type="checkbox" id="sentinel_checked">
+								<label>開啟</label>
+							</div>
+						</div>
+						<br><br>
+						<button class='ui button' id="Sentinel2_get" onclick = 'Sentinel2_getKml()'>執行</button>
+						<div id='treeBox_sentinel2' style='width:100%;height:200;'></div>
+					</div> -->
+					</div>
+				</div>
+				<div id='sentinel_compare_block'>
+					<div id="Analysis_1_2" class='title' style="display:none">
+						<i class='dropdown icon'></i>Sentinel-2兩期影像變異比對(分析區域：陸地區域)
+					</div>
+					<div class='content'>
+						<div id=vue_sentinel2_compare_api>
+							<Sentinel2_compare_api @access-toukyoken="fun_access_log"
+							:maps="maps"
+							:map_ind="map_ind"
+							ref="sentinel2_compare_api">
+							</Sentinel2_compare_api>
+						</div>
+<!-- 					<div class='ui secondary menu'>
+							<a class='item' id='sentinel_polyCompare_button'><img src='img/paint03.png' alt=''></a>
+							<button class='ui button' onclick='clear_sentinel2_compare_region()'> clear </button>
+						</div>
+						<div class='ui form'>
+							<div class='fields'>
+								<div class='field'>
+									<label>之前 (左圖層)</label>
+									<select id="sentinel2_compare_list1">
+									</select>
+									<label>之後 (右圖層)</label>
+									<select id="sentinel2_compare_list2">
+									</select>
+								</div>
+							</div>
+							<div class="ui toggle checkbox" id="sentinel_compare_cb">
+								<input type="checkbox" id="sentinel_compare_checked">
+								<label>開啟</label>
+							</div>
+						</div>
+						<br><br>
+						<button class='ui button' id="Sentinel2_getCompare"
+							onclick='Sentinel2_getCompareKml()'>執行</button>
+						<div id='treeBox_sentinel2_compare' style='width:100%;height:200;'></div> -->
+					</div>
+				</div>
+				<div id='sentinel_sis_block'>
+					<div id="Analysis_1_3" class='title' style="display:none">
+						<i class='dropdown icon'></i>Sentinel-2頻譜指標分析
+					</div>
+					<div class='content'>
+						<div id=vue_sentinel2_sis_api>
+							<Sentinel2_sis_api @access-toukyoken="fun_access_log"
+							:maps="maps"
+							:map_ind="map_ind"
+							ref="sentinel2_sis_api">
+							</Sentinel2_sis_api>
+						</div>
+<!-- 						<div class='ui secondary menu'>
+							<a class='item' id='sentinel_polySis_button'><img src='img/paint06.png' alt=''></a>
+							<button class='ui button' onclick='clear_sentinel2_sis_region()'> clear </button>
+						</div>
+						<div class='ui form'>
+							<div class='fields'>
+								<div class='field'>
+									<div class='field' id='sentinel2_sis_list_field'>
+										<select id="sentinel2_sis_list">
+										</select>
+									</div>
+									<div class='field' id='sentinel2_sis_list_cmp_field' style="display:none">
+										<label>之前 (左圖層)</label>
+										<select id="sentinel2_sis_list1">
+										</select>
+										<label>之後 (右圖層)</label>
+										<select id="sentinel2_sis_list2">
+										</select>
+									</div>
+									<div class='field'>
+										<br>
+										<label>頻譜指標</label>
+										<select id="sentinel2_sis_spectral">
+											<option value="NDWI">常態化差異水體指標</option>
+											<option value="NDVI">植生指標</option>
+											<option value="NBR">標準化燃燒指標</option>
+											<option value="DNBR">標準化燃燒指標差異</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="ui toggle checkbox" id="sentinel_sis_cb">
+								<input type="checkbox" id="sentinel_sis_checked">
+								<label>開啟</label>
+							</div>
+						</div>
+						<br><br>
+						<button class='ui button' id="Sentinel2_getSis" onclick='Sentinel2_getSisKml()'>執行</button>
+						<div id='treeBox_sentinel2_sis' style='width:100%;height:200;'></div> -->
+					</div>
+				</div>
+
+
+				<!-- add 20190610 -->
+				<div id='subscene_block'>
+					<div id="Analysis_1_8" class='title'>
+						<i class='dropdown icon'></i>Sentinel-2時間序列影像產製
+					</div>
+					<div class='content'>
+						<div id=vue_subscene_image_api>
+							<Subscene_image_api @access-toukyoken="fun_access_log"
+							:maps="maps"
+							:map_ind="map_ind"
+							ref="subscene_image_api">
+							</Subscene_image_api>
+						</div>
+						<!-- <div class='ui secondary menu'>
+							<a class='item' id='subscene_button'><img src='img/paint06.png' alt=''></a>
+							<button class='ui button' onclick='clear_subscene_region()'> clear </button>
+						</div>
+						<div class='ui form'>
+							<div class='fields'>
+								<div class='field'>
+
+									<label>起始時間點 (左圖層)</label>
+									<select id="subscene_list1">
+									</select>
+									<label>結束時間點 (右圖層)</label>
+									<select id="subscene_list2">
+									</select>
+									<br>
+									<label>輸出解析度(m)</label>
+									<input type='text' id='subscene_PixelSize' value='10'>
+								</div>
+							</div>
+							<div class="ui toggle checkbox" id="subscene_cb">
+								<input type="checkbox" id="subscene_checked">
+								<label>開啟</label>
+							</div>
+						</div>
+						<br><br>
+						<button class='ui button' id="subscene_get" onclick='subscene_getKml()'>執行</button>
+						<div id='treeBox_subscene' style='width:100%;height:200;'></div> -->
+					</div>
+				</div>
+				<!--------------->
+
+				<!-- add 20191125 -->
+				<div id='dual_spectrum_block'>
+					<div id="Analysis_1_9" class='title'>
+						<i class='dropdown icon'></i>自訂頻譜波段匯出功能
+					</div>
+					<div class='content'>
+						<div id=vue_dual_spectrum_api>
+							<Dual_spectrum_api @access-toukyoken="fun_access_log"
+							:maps="maps"
+							:map_ind="map_ind"
+							ref="dual_spectrum_api">
+							</Dual_spectrum_api>
+						</div>
+					</div>
+				</div>
+
+				<!--------------->
+
+				<div id="Land_1_1" class='title'>
+					<i class='dropdown icon'></i>縱橫斷面分析
+				</div>
+				<div class='content' style="width:100%;">
+					<div id="vue_scale_path">
+						<Land_1_1 @access-scalepath="fun_access_log" :maps="maps" :map_ind="map_ind" ></Land_1_1>
+					</div>
+				</div>
+					
+					<!--------------->
+					
+				<div id='Land_1_2' class='title'>
+					<i class='dropdown icon'></i>高程陰影圖
+				</div>
+				<div class='content'>
+					<div id="vue_hillshade">
+						<Land_1_2 @access-hillshade="fun_access_log" :maps="maps" :map_ind="map_ind" ></Land_1_2>
+					</div>
+					<div id='treeBox' style='width:100%;height:200;'></div>
+				</div>
+					
+				<!--------------->
+				<div id='Land_1_3' class='title'>
+					<i class='dropdown icon'></i>八方位陰影圖
+				</div>
+				<div class='content' style="display:none">
+					<div id="vue_hillshadeAZ">
+						<Land_1_3 @access-hillshade-a-z="fun_access_log" :maps="maps" :map_ind="map_ind" ></Land_1_3>
+					</div>
+					<div id='treeBoxAZ' style='width:100%;height:200;'></div>
+				</div>
+				<!-- 20220512 update vue-->
+
+				<div id='Land_1_4' class='title'>
+					<i class='dropdown icon'></i>等高線計算
+				</div>
+				<div class='content'>
+					<div id = "vue_contour">		   
+						<Contour @access-contour="fun_access_log" :maps="maps" :map_ind="map_ind"></Contour>
+					</div>
+					<div id='treeBox_contour' style='width:100%;height:200;'></div>
+				</div>
+
+				<!-- 20190330 fixed -->
+				<div id='stifile' class='title' style="display:none">
+					<i class='dropdown icon'></i>高程立體透視圖
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='stlfile_button'><img src='img/paint06.png' alt=''></a>
+						<button class='ui button' onclick='clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='stifile_menu'>
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='stlfile_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+								<!-- 20190513 fixed -->
+								<!--
+						<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>
+                        <option value='TW_DLA_20110101_20161101_5M_3826'>5M TW DLA DTM (99-104年)</option>
+						-->
+								<!-- 20190513 fixed -->
+							</select>
+						</div>
+					</div>
+					<!-- 20190513 add -->
+					<br><br>
+					<button class='ui button' id="get_stlfile_data" onclick='get_stlfile_data()'>執行</button>
+					<!------------------>
+					<div id='treeBox_stlfile' style='width:100%;height:200;'></div>
+				</div>
+
+				<div id='Land_1_5' class='title'>
+					<i class='dropdown icon'></i>視域範圍分析
+				</div>
+				<div class='content'>
+					<div id="vue_viewshed">
+						<Land_1_5 @access-viewshed="fun_access_log" :maps="maps" :map_ind="map_ind"></Land_1_5>
+					</div>
+					<div id='treeBox_viewshed' style='width:100%;height:200;'></div>
+				</div>
+				<!-- 20220512 update vue-->
+
+				<div id='Land_1_6' class='title' style="display:none">
+					<i class='dropdown icon'></i>多色地圖
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='MCRIF_button'><img src='img/paint06.png' alt=''></a>
+						<button class='ui button' onclick='clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='MCRIF_menu'>
+						<div class='eight wide field'>
+							<label>顏色樣板</label>
+							<select id='MCRIF_color'>
+								<option value='0'>0</option>
+								<option value='1'>1</option>
+								<option value='2'>2</option>
+								<option value='3'>3</option>
+								<option value='4'>4</option>
+								<option value='5'>5</option>
+								<option value='6'>6</option>
+								<option value='7'>7</option>
+								<option value='8'>8</option>
+								<option value='9'>9</option>
+								<option value='10'>10</option>
+								<option value='11'>11</option>
+								<option value='12'>12</option>
+								<option value='13'>13</option>
+								<option value='14'>14</option>
+								<option value='15'>15</option>
+								<option value='16'>16</option>
+								<option value='17'>17</option>
+								<option value='18'>18</option>
+								<option value='19'>19</option>
+							</select>
+						</div>
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='MCRIF_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+								<!-- 20190513 fixed -->
+								<!--
+						<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>
+                        <option value='TW_DLA_20110101_20161101_5M_3826'>5M TW DLA DTM (99-104年)</option>
+						-->
+								<!-- 20190513 fixed -->
+							</select>
+						</div>
+					</div>
+					<!-- 20190513 add -->
+					<br><br>
+					<button class='ui button' id="get_MCRIF_data" onclick='get_MCRIF_data()'>執行</button>
+					<!------------------>
+					<div id='treeBox_MCRIF' style='width:100%;height:200;'></div>
+				</div>
+				<div id='Land_1_7' class='title' style="display:none">
+					<i class='dropdown icon'></i>透空度分析
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='svf_button'><img src='img/paint06.png' alt=''></a>
+						<button class='ui button' onclick='clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='svf_menu'>
+						<div class='eight wide field'>
+							<label>半徑</label>
+							<select id='svf_radius'>
+								<option value='50'>50M</option>
+								<option value='100'>100M</option>
+								<option value='250'>250M</option>
+								<option value='500'>500M</option>
+								<option value='1000'>1000M</option>
+							</select>
+						</div>
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='svf_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+								<!-- 20190513 fixed -->
+								<!--
+						<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>
+                        <option value='TW_DLA_20110101_20161101_5M_3826'>5M TW DLA DTM (99-104年)</option>
+						-->
+								<!-- 20190513 fixed -->
+							</select>
+						</div>
+					</div>
+					<!-- 20190513 add -->
+					<br><br>
+					<button class='ui button' id="get_svf_data" onclick='get_svf_data()'>執行</button>
+					<!------------------>
+					<div id='treeBox_svf' style='width:100%;height:200;'></div>
+				</div>
+				<div id='Land_1_8' class='title' style="display:none">
+					<i class='dropdown icon'></i>開闊度分析
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='openness_button'><img src='img/paint06.png' alt=''></a>
+						<button class='ui button' onclick='clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='openness_menu'>
+						<div class='eight wide field'>
+							<label>開闊度</label>
+							<select id='openness_posneg'>
+								<option value=''>正開闊</option>
+								<option value='-'>負開闊</option>
+							</select>
+						</div>
+						<div class='eight wide field'>
+							<label>半徑</label>
+							<select id='openness_radius'>
+								<option value='50'>50M</option>
+								<option value='100'>100M</option>
+								<option value='250'>250M</option>
+								<option value='500'>500M</option>
+								<option value='1000'>1000M</option>
+							</select>
+						</div>
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='openness_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+								<!-- 20190513 fixed -->
+								<!--
+						<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>
+                        <option value='TW_DLA_20110101_20161101_5M_3826'>5M TW DLA DTM (99-104年)</option>
+						-->
+								<!-- 20190513 fixed -->
+							</select>
+						</div>
+					</div>
+					<!-- 20190513 add -->
+					<br><br>
+					<button class='ui button' id="get_openness_data" onclick='get_openness_data()'>執行</button>
+					<!------------------>
+					<div id='treeBox_openness' style='width:100%;height:200;'></div>
+
+				</div>
+
+				<div id='Land_1_9' class='title'>
+					<i class='dropdown icon'></i>路徑規劃
+				</div>
+				<div class='content'>
+					<div id="vue_get_route">
+						<Land_1_9 @access-scalepath="fun_access_log" :maps="maps" :map_ind="map_ind" ref="foo"></Land_1_9>
+					</div>
+				</div>
+				<!--20220512 update vue-->
+
+					<!-- 20210722 add -->
+					<div id='Model_1_1' class='title'>
+						<i class='dropdown icon'></i>集水區潛在災害類型評估工具
+					</div>
+					<div class='content'>
+						<div id="vue_Melton_ratio">
+						<Model_1_1 @access-meltonratio="fun_access_log" :maps="maps" :map_ind="map_ind" ></Model_1_1>
+						</div>
+					</div>
+	
+				<!-- 20210913 add -->
+				<div id='Model_1_2' class='title'style="display:none">
+					<i class='dropdown icon'></i>流域逕流 洪峰流量計算
+				</div>
+				<div class='content'>
+					<div id="vue_peak_discharge">
+					<Model_1_2 @access-meltonratio="fun_access_log" :maps="maps" :map_ind="map_ind" ></Model_1_2>
+					</div>
+				</div>
+				<!-- 20211127 add -->
+				<div id='Model_1_3' class='title'style="display:none">
+					<i class='dropdown icon'></i>坡面穩定曲線法
+				</div>
+				<div class='content'>
+					<div id="vue_akadani">
+					<Model_1_3 @access-akadani="fun_access_log" :maps="maps" :map_ind="map_ind" ></Model_1_3>
+					</div>
+				</div>
+
+				<!-- 20190330 fixed -->
+
+				<div id='Analysis_1_7' class='title' style="display:">
+					<i class='dropdown icon'></i>挖填方分析
+				</div>
+
+				<div class='content' style="display:none">
+					<!--div id='mainDraw_cf' class='accordion'> 
+				<div class='title'>
+					<i class='dropdown icon'></i>取得挖填方區域
+				</div-->
+					<div class='content'>
+						<div class='ui secondary menu'>
+							<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+							<a class='item' id='cutfill_square_button'><img src='img/paint06.png' alt=''></a>
+							<a class='item' id='cutfill_poly_button'><img src='img/paint03.png' alt=''></a>
+						</div>
+						<div class='ui form' id='cutfill_menu'>
+							<div class='eight wide field'>
+								<label>挖填方高程值(公尺)</label>
+								<input type='text' id='cutfill_height' value='20'>
+							</div>
+							<div class='eight wide field'>
+								<label>數值資料</label>
+								<select id='cutfill_data'>
+									<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+									<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+									<!-- 20190513 fixed -->
+									<!--<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>-->
+									<!-- 20190513 fixed -->
+								</select>
+							</div>
+						</div>
+						<!-- 20190513 add -->
+						<br><br>
+						<button class='ui button' id="get_cutfill_data" onclick='get_cutfill_data()'>執行</button>
+						<!------------------>
+						<div id='treeBox_cutfill' style='width:100%;height:200;'></div>
+					</div>
+					<!--div class='title'>
+					<i class='dropdown icon'></i>取得挖填方剖面圖
+				</div>
+				<div class='content'>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a> 
+						<a class='item' id = 'cutfill_line_button'><img src='img/paint04.png' alt=''></a>
+						<button class = 'ui button' onclick = 'clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='cutfillline_menu'>
+						<div class='eight wide field'> 
+							<label>挖填方高程值(公尺)</label> 
+							<input type='text' id='cutfillline_height' value = '20'> 
+						</div> 
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='cutfillline_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option-->
+					<!-- 20190513 fixed -->
+					<!--<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>-->
+					<!-- 20190513 fixed -->
+					<!--/select> 
+						</div>
+					</div>
+					<label id = "WE_describe"></label><a id = 'WE_link' target="_blank"></a>
+					<img id = 'chartUrl_WE'></img>
+					<br>
+					<label id = "NS_describe"></label><a id = 'NS_link' target="_blank"></a>
+					<img id = 'chartUrl_NS'></img>
+					
+					
+				   <br><br>
+				   <button class='ui button' id="get_cutfill_Ldata" onclick = 'get_cutfill_Ldata()'>執行</button>
+					
+				</div>
+			</div-->
+				</div>
+				<div id='Analysis_1_4' class='title' style="display:none" onClick='slope_function_show(0)'>
+					<i class='dropdown icon'></i>坡度分析
+				</div>
+				<div class='content' id='original_slope'>
+					<div id='slope_tool'>
+						<!-- 20190515 fixed -->
+						<div class='ui secondary menu'>
+							<a class='item' id='slope_paint01'><img src='img/paint01.png'></a>
+							<a class='item' id='slope_paint06'><img src='img/paint06.png'></a>
+							<br>
+						</div>
+						<!-- 20190515 fixed -->
+					</div>
+					<select id='slope_select' onchange='slope_tool_show()' class='select-control'>
+						<!-- 20190515 fixed -->
+						<!--<option value='坡度分析' selected='selected'>坡度分析</option>-->
+						<!-- 20190515 fixed -->
+						<option value='getSlopeValue'>單點坡度資訊(getSlopeValue)</option>
+						<!--option value='getSlopeClassify'>坡度分級分析(getSlopeClassify)</option-->
+						<option value='getImageFileLV7'>坡度分級影像地圖(7級)(getImageFileLV7)</option>
+						<!--option value='getImageLV7'>套疊坡度分級WMS(7級)(getImageLV7)</option-->
+						<option value='getImageFileLV6'>坡度分級影像地圖(6級)(getImageFileLV6)</option>
+						<!--option value='getImageLV6'>套疊坡度分級WMS(6級)(getImageLV6)</option-->
+						<!--option value='getImageFile30Percent'>坡度大於30%分級影像地圖(getImageFile30Percent)</option-->
+						<!--option value='getSlopeRange'>坡度統計值(getSlopeRange)</option-->
+						<option value='getImageDPLV6' selected='selected'>災害潛勢坡度分級圖檔(getImageDPLV6)</option>
+					</select>
+					<br><br>
+					點位<br><br>
+					<input type='text' id='slope_locate' placeholder='請從地圖上點位' class='disable-control' disabled><br><br>
+					數值資料<br><br>
+
+					<select id='slope_data' class='select-control'>
+						<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+						<option value='TW_DLA_20110101_20161101_20M_3826' selected='selected'>20M TW DLA DTM (99-104年)
+						</option>
+						<!-- 20190513 fixed -->
+						<!--<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>-->
+						<!-- 20190513 fixed -->
+					</select>
+					<br><br>
+					<button class='ui button' id="slope_execute" onclick='slope_execute()'>執行</button>
+					<!-- 20190513 fixed -->
+					<div id='treeBox_slope' style='width:100%;height:200;'></div>
+					<div id='slope_result'></div>
+					<!-- 20190513 fixed -->
+
+				</div>
+
+				<div id='Analysis_1_5' class='title' style="display:none" onClick="aspect_function_show(0)">
+					<i class='dropdown icon'></i>坡向分析
+				</div>
+
+				<div class='content' id='original_aspect' style="display:none">
+					<div id='aspect_tool'>
+						<!-- 20190515 fixed -->
+						<div class='ui secondary menu'>
+							<a class='item' id='aspect_paint01'><img src='img/paint01.png'></a>
+							<a class='item' id='aspect_paint06'><img src='img/paint06.png'></a>
+							<br>
+						</div>
+						<!-- 20190515 fixed -->
+					</div>
+					<select id='aspect_select' onchange='aspect_tool_show()' class='select-control'>
+
+						<!-- 20190515 fixed -->
+						<!--<option value='坡向分析' selected='selected'>坡向分析</option>-->
+						<!-- 20190515 fixed -->
+						<option value='getImageFile'>取得坡向分級影像(getImageFile)</option>
+						<option value='getAspectValue'>取得單點坡向值(getAspectValue)</option>
+						<option value='getAspectClassify'>取得坡向分級分析結果(getAspectClassify)</option>
+						<!--option value='getImage'>取得坡向分級圖檔(getImage)</option-->
+					</select>
+					<br><br>
+					WKT<br><br>
+					<input type='text' id='aspect_locate' placeholder='請從地圖上點位' class='disable-control'
+						disabled><br><br>
+					數值資料<br><br>
+					<select id='aspect_data' class='select-control'>
+						<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+						<option value='TW_DLA_20110101_20161101_20M_3826' selected='selected'>20M TW DLA DTM (99-104年)
+						</option>
+						<!-- 20190513 fixed -->
+						<!--<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>-->
+						<!-- 20190513 fixed -->
+					</select>
+					<br><br>
+					<button class='ui button' id="aspect_execute" onclick='aspect_execute()'>執行</button>
+					<!-- 20190513 fixed -->
+					<div id='treeBox_aspect' style='width:100%;height:200;'></div>
+					<div id='aspect_result'></div>
+					<!-- 20190513 fixed -->
+				</div>
+
+				<div id ="Data_Use_Model_1_4" class='title' onClick="fun_un_vis()">
+					<i class='dropdown icon'></i>土石流模式SDF model
+				</div>
+				<div class='content'>
+					<label>模擬結果</label>
+					<br>
+					事件名稱 : <select id="soil_list" onchange="get_select_opt()">
+					<option value="679">20210807盧碧颱風玉穗溪集水區土石流模擬</option>
+					<option value="723">20210807盧碧颱風高市DF072土石流模擬</option>
+					<option value="724">20210807盧碧颱風高市DF106土石流模擬</option>
+					</select>
+					<br><br>
+					<img id="soil_legend" src="https://storage.geodac.tw/SWCB_Personal/298/Compute/GEONET_DebrisFlow/test/Range203/mssrc_Legend.jpg"  style=" height:10%; width:100%; border-style:solid; border-width:3px; border-radius: 5px; border-color: gray;" >
+			
+					<button id='soil_start' onclick="soil_start()"> start </button>
+					<button id='soil_stop' onclick="soil_stop()"> stop </button>
+					<button id='soil_reset' onclick="soil_reset()"> reset </button>
+					<br><br>
+					速度 : <input type="text" id="soil_speed" size="15" value="2">
+					取樣 : <input type="text" id="soil_sample" size="15" value="1" >
+					<br><br>
+					<div id="soil_Progress" style="width: 90%; height: 30px; background-color: #ddd; margin:0 auto;">
+						<div id="soil_Bar" style="width: 0%; height: 30px; background-color: #04AA6D; text-align: center; line-height: 30px; color: black;"></div>
+					    時間(s)：<div id="soil_Bar_time">1</div>
+					</div>
+					<br>
+					<!-- <button id='get_soil_result' onclick="get_compute_result()" style="display:none"> get result </button> -->
+					<br><br>
+
+					<div id ="Func_Use_Model_1_2" class="transition hidden" >
+						<label>圖選設定</label><br>
+						<label>圖選分析區域</label>
+						<br><br>
+						<div class='ui secondary menu'>
+							<a class='item' id = 'dem_poly_button'><img src='img/paint03.png' alt=''></a>  
+							<button class = 'ui button' onclick = 'clear_dem_region()'> clear </button>
+						</div>
+						<br>
+						<label>圖選土砂料源</label> 
+						<br>
+						<div class='ui secondary menu'>
+							<a class='item' id = 'mssrc_poly_button'><img src='img/paint03.png' alt=''></a>  
+							<button class = 'ui button' onclick = 'clear_mssrc_region()'> clear </button>
+							<br>
+						</div>
+						<div class='ui form'>
+							<div class='fields'>
+								<div class='field'>
+									<label>數值資料</label> 
+									<select id="soil_data_select_list">
+										<option value="0">20M TW DLA DTM (92-94年)</option>
+									</select>
+									<br>
+									<label>進階設定</label> 
+									<br>
+									<label>運算任務名稱</label> 
+									<input type='text' id='compute_name' value='SDF模式運算任務'>
+									<br>
+									<label>崩塌深度(單位:公尺)</label> 
+									<input type='text' id='MSSRC_Depth' value = '3'>
+									<br>
+									<label>運動黏滯係數(建議值0.25~5.35)</label> 
+									<input type='text' id='vs' value = '0.5'>
+									<br>
+									<label>體積濃度(建議值0.603)</label> 
+									<input type='text' id='cv' value = '0.603'>
+									<br>
+									<label>演算時距(20mDEM建議值為0.5)</label> 
+									<input type='text' id='dt' value = '0.5'>
+									<br>
+									<label>時間時距(單位:秒)</label> 
+									<input type='text' id='save_dt' value = '1.0'>
+									<br>
+									<label>繪圖的時間間距</label> 
+									<input type='text' id='plot_dt' value = '1.0'>
+									<br>
+									<label>繪圖最大土石流深度</label> 
+									<input type='text' id='plot_MaxDepth' value = '5.0'>
+									<br>
+								</div>
+							</div> 
+						</div>
+						
+						<br><br>
+						<button class='ui button' id="soil_done" onclick = 'dem_getKml()'>執行</button>
+						<div id='soil_div' style='width:100%;height:200;'></div>
+					</div>
+				</div>  
+
+
+				<div class='title' style="display:none">
+					<i class='dropdown icon'></i>近似高度分析
+				</div>
+				<div class='content' style="display:none">
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='point_height_button'><img src='img/paint02.png' alt=''></a>
+						<button class='ui button' onclick='clear_map()'> clear </button>
+					</div>
+					<div class='ui form' id='pointheight_menu'>
+						<div class='eight wide field'>
+							<label>數值資料</label>
+							<select id='pointheight_data'>
+								<option value='TW_DLA_20010814_20061226_20M_3826'>20M TW DLA DTM (92-94年)</option>
+								<option value='TW_DLA_20110101_20161101_20M_3826'>20M TW DLA DTM (99-104年)</option>
+								<!-- 20190513 fixed -->
+								<!--<option value='TW_DLA_20010814_20061226_5M_3826'>5M TW DLA DTM (92-94年)</option>-->
+								<!-- 20190513 fixed -->
+							</select>
+						</div>
+						<div class='eight wide field'>
+							<label>匯入csv</label>
+							<input type="file" id="pointHeightInfile" name="pointHeightInfile"
+								style="display: block; visibility: hidden; width: 0; height: 0;">
+							<button class='ui button' onClick="getPointHeightFile()">上傳檔案</button>
+							<br><br>
+							<input type='text' id='PointHeightFileName' placeholder='請選擇檔案' class='disable-control'
+								disabled>
+							<br><br>
+							<button class='ui button' onClick="getBatchPointHeight()">submit</button>
+							<label id="pointHeightInfileLink"></label>
+						</div>
+					</div>
+					<div id='pointHeight_div'></div>
+					<div id='pointHeight_chartdiv'></div>
+				</div>
+			</div>
+
+			<div id='otherTools'>
+				<div id="Draw_1_1" class='title'>
+					<i class='dropdown icon'></i>
+					繪圖工具
+				</div>
+				<!-- Two layer Accordion list -->
+				<div class='content'>
+					<div id='draw_tool'>
+						<!-- Tab list -->
+						<div class='ui secondary menu'>
+							<!-- select -->
+							<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+							<!-- text -->
+							<a class='item' data-tab='two' id='point_button'><img src='img/paint02.png' alt=''></a>
+							<!-- icon -->
+							<a class='item' data-tab='three' id='line_button'><img src='img/paint04.png' alt=''></a>
+							<!-- arrow -->
+							<a class='item' data-tab='four' id='poly_button'><img src='img/paint03.png' alt=''></a>
+							<!-- measure -->
+							<a class='item' data-tab='five' id='measure_button'><img src='img/paint05.png' alt=''></a>
+						</div>
+						<div class='ui tab segment' data-tab='one' id='move_map_button'></div>
+						<!-- point -->
+						<div class='ui tab segment' data-tab='two'>
+							<div class='ui form' id='point_menu'>
+								<div class='fields'>
+									<div class='eight wide field'>
+										<label>字體</label>
+										<select id='point_text_size'>
+											<option value='1'>1.0</option>
+											<option value='1.5'>1.5</option>
+											<option value='2'>2.0</option>
+											<option value='2.5'>2.5</option>
+											<option value='3'>3.0</option>
+											<option value='3.5'>3.5</option>
+											<option value='4'>4.0</option>
+											<option value='4.5'>4.5</option>
+											<option value='5'>5.0</option>
+											<option value='5.5'>5.5</option>
+											<option value='6'>6.0</option>
+											<option value='6.5'>6.5</option>
+
+										</select>
+									</div>
+									<div class='eight wide field'>
+										<label>顏色</label>
+										<input type='text' class='color_picker' id='point_text_color' value='#000000' />
+									</div>
+								</div>
+								<div class='field'>
+									<label>內容</label>
+									<input type='text' id='point_text_content' />
+								</div>
+								<div class='fields'>
+									<div class='field'>
+										<input type='radio' name='point_icon' checked='checked' value='none'
+											tabindex='0'>
+										<p>無圖示</p>
+									</div>
+									<div class='field'>
+										<input type='radio' name='point_icon' value='img/marker01.png' tabindex='0'>
+										<img class='ui small image' src='img/marker01.png'>
+									</div>
+									<div class='field'>
+										<input type='radio' name='point_icon' value='img/marker02.png' tabindex='0'>
+										<img class='ui small image' src='img/marker02.png'>
+									</div>
+									<div class='field'>
+										<input type='radio' name='point_icon' value='img/marker03.png' tabindex='0'>
+										<img class='ui small image' src='img/marker03.png'>
+									</div>
+								</div>
+								<!-- <div class='field'> -->
+									<!-- <label>角度：<span id='point_text_arc'></span></label> -->
+									<!-- <div class='ui brown range' id='point_arc_ranger'></div> -->
+								<!-- </div> -->
+							</div>
+						</div>
+						<!-- line -->
+						<div class='ui tab segment' data-tab='three'>
+							<div class='ui form' id='line_menu'>
+								<div class='fields'>
+									<div class='eight wide field'>
+										<label>字體大小</label>
+										<select id='line_text_size'>
+											<option value='1'>1.0</option>
+											<option value='1.5'>1.5</option>
+											<option value='2'>2.0</option>
+											<option value='2.5'>2.5</option>
+											<option value='3'>3.0</option>
+											<option value='3.5'>3.5</option>
+											<option value='4'>4.0</option>
+											<option value='4.5'>4.5</option>
+											<option value='5'>5.0</option>
+											<option value='5.5'>5.5</option>
+											<option value='6'>6.0</option>
+											<option value='6.5'>6.5</option>
+										</select>
+									</div>
+									<div class='eight wide field'>
+										<label>字顏色</label>
+										<input type='text' class='color_picker' id='line_text_color' value='#000000' />
+									</div>
+								</div>
+								<div class='field'>
+									<label>內容</label>
+									<input type='text' id='line_text_content' />
+								</div>
+								<!-- <div class='field'> -->
+									<!-- <label>字角度：<span id='line_text_arc'></span></label> -->
+									<!-- <div class='ui brown line range' id='line_arc_ranger'></div> -->
+								<!-- </div> -->
+								<div class='fields'>
+									<div class='eight wide field'>
+										<label>線寬</label>
+										<select id='line_size'>
+											<option value='2'>2</option>
+											<option value='4'>4</option>
+											<option value='6'>6</option>
+											<option value='8'>8</option>
+											<option value='10'>10</option>
+											<option value='13'>13</option>
+											<option value='15'>15</option>
+											<option value='20'>20</option>
+											<option value='30'>30</option>
+											<option value='40'>40</option>
+										</select>
+									</div>
+									<div class='eight wide field'>
+										<label>線顏色</label>
+										<input type='text' class='color_picker' id='line_color' value='#000000' />
+									</div>
+								</div>
+							</div>
+						</div>
+						<!-- polygon -->
+						<div class='ui tab segment' data-tab='four'>
+							<div class='ui form' id='poly_menu'>
+								<div class='fields'>
+									<div class='eight wide field'>
+										<label>字體大小</label>
+										<select id='poly_text_size'>
+											<option value='1'>1.0</option>
+											<option value='1.5'>1.5</option>
+											<option value='2'>2.0</option>
+											<option value='2.5'>2.5</option>
+											<option value='3'>3.0</option>
+											<option value='3.5'>3.5</option>
+											<option value='4'>4.0</option>
+											<option value='4.5'>4.5</option>
+											<option value='5'>5.0</option>
+											<option value='5.5'>5.5</option>
+											<option value='6'>6.0</option>
+											<option value='6.5'>6.5</option>
+										</select>
+									</div>
+									<div class='eight wide field'>
+										<label>字顏色</label>
+										<input type='text' class='color_picker' id='poly_text_color' value='#000000' />
+									</div>
+								</div>
+								<div class='field'>
+									<label>內容</label>
+									<input type='text' id='poly_text_content' />
+								</div>
+								<div class='field'>
+									<label>字角度：0<span id='poly_text_arc'></span></label>
+									<div class='ui brown range' id='poly_arc_ranger'></div>
+								</div>
+								<div class='fields'>
+									<div class='field'>
+										<label>邊寬</label>
+										<select id='poly_border_size'>
+											<option value='2'>2</option>
+											<option value='4'>4</option>
+											<option value='6'>6</option>
+											<option value='8'>8</option>
+											<option value='10'>10</option>
+											<option value='13'>13</option>
+											<option value='15'>15</option>
+											<option value='20'>20</option>
+											<option value='30'>30</option>
+											<option value='40'>40</option>
+										</select>
+									</div>
+									<div class='four wide field'>
+										<label>邊框顏色</label>
+										<input type='text' class='color_picker' id='poly_line_color' value='#000000' />
+									</div>
+									<div class='field'>
+										<label>多邊形顏色</label>
+										<input type='text' class='color_picker' id='poly_color' value='#000000' />
+									</div>
+									<div class='field'>
+										<label>多邊形透明度：50<span id='poly_trans'></span></label>
+										<div class='ui brown range' id='poly_trans_ranger'></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class='ui tab segment' data-tab='five'>
+							<div class='ui form' id='poly_menu'>
+								<div class='field'>
+									<label>測量型態</label>
+									<select id='type'>
+										<option value='length'>線段長度 (LineString)</option>
+										<option value='area'>多邊形面積 (Polygon)</option>
+										<option value='point'>經緯度坐標 (location)</option>
+									</select>
+								</div>
+								<div class='fields'>
+									<div class='field'>
+										<button class='ui button' id='measure_clean'>清除測量</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div id="Draw_1_2" class='title'>
+					<i class='dropdown icon'></i>編輯圖示
+				</div>
+				<div class='content'>
+					<table class='ui small table' id='editor'>
+						<thead>
+							<tr>
+								<th>項次</th>
+								<th>型態</th>
+								<th>定位</th>
+								<th>編輯</th>
+								<th>刪除</th>
+								<th>開關</th>
+							</tr>
+						</thead>
+						<tbody></tbody>
+					</table>
+				</div>
+				<div id="Draw_1_3" class='title'>
+					<i class='dropdown icon'></i>繪圖工具成果匯入匯出
+				</div>
+				<div class='content'>
+					<a id='export-kml' download='myMap.kml'><button class='custom-file-upload'
+							type='button'>繪圖成果匯出</button></a> <br><br>
+					<label for="import-kml" class="custom-file-upload">
+						<i class="fa fa-cloud-upload"></i>匯入先前繪圖成果
+						<input id="import-kml" type="file" style="display:none">
+					</label>
+
+
+				</div>
+				<div id="Share_1_1" class='title'>
+					<i class='dropdown icon'></i>分享
+				</div>
+				<div class='content'>
+					<button class='ui facebook button' id='fb_share'>
+						<i class='facebook icon'></i>Facebook
+					</button>
+					<button class='ui twitter button' id='emailLink'>
+						<i class='mail outline icon'></i>E-Mail
+					</button>
+				</div>
+
+				<div id="vue_printfile">
+					<!-- @access-printfile是 $emit 綁定的事件名稱, 事件命名不能為大寫, 要用-隔開 , html不分大小寫-->
+					<!-- fun_access_log 是父層的 methods -->
+					<print_file @access-printfile="fun_access_log" :maps="maps" :map_ind="map_ind"></print_file>
+				</div>
+
+				<iframe id='download_iframe' style='display:none;width:0px;height:0px;'></iframe>
+
+				<!-- 1007 -->
+				<div id="Share_1_3" class='title'>
+					<i class='dropdown icon'></i>圖資序列化動態 GIF 檔產製
+				</div>
+
+				<div class='content'>
+					*<a href="BigGIS_GIF動圖產生補充調整使用說明.pdf" target="_blank" title="詳細操作請參考">產製操作說明</a>
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *<a href="BigGIS截圖比例說明.pdf" target="_blank" title="詳細操作請參考">
+						<font color="#FF0000">GIF檔比例跑掉了怎麼辦?!</font>
+					</a> <br>
+					<div class="ui toggle checkbox" id="gif_lock_map_cb">
+						<input type="checkbox" id='gif_lock_map_checked'>
+
+						<label>鎖定螢幕</label>
+					</div>
+					<br>
+					<div class="ui form">
+						<div class="inline fields">
+							<label>影格速度</label>
+							<div class="field">
+								<div class="ui radio checkbox">
+									<input type="radio" name="frequency" checked="checked" id='gif_speed_high'>
+									<label>快</label>
+								</div>
+							</div>
+							<div class="field">
+								<div class="ui radio checkbox">
+									<input type="radio" name="frequency" id='gif_speed_medium'>
+									<label>中</label>
+								</div>
+							</div>
+							<div class="field">
+								<div class="ui radio checkbox">
+									<input type="radio" name="frequency" id='gif_speed_low'>
+									<label>慢</label>
+								</div>
+							</div>
+							<!--div class="field">
+                        <div class="ui radio checkbox">
+                            <input type="radio" name="frequency" id='gif_speed_user_define'>
+                            <label>自訂</label>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <div class="ui radio checkbox">
+                            <input type="text" name="frequency" id='gif_speed' value="1" placeholder="Input speed">
+                        </div>
+                    </div-->
+						</div>
+					</div>
+					<div class="ui form">
+						<div class="inline fields">
+							<label>坐標格式</label>
+							<div class="field">
+								<div class="ui radio checkbox">
+									<input type="radio" name="xytype" checked="checked" id='crop_lat_lng'>
+									<label>經緯度</label>
+								</div>
+							</div>
+							<div class="field">
+								<div class="ui radio checkbox">
+									<input type="radio" name="xytype" id='crop_twd97'>
+									<label>TWD97</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="ui input">
+						<label>影格標題</label>
+						<input type="text" placeholder="Input text" id="gif_text">
+					</div>
+					<div class="ui input">
+						<label>影格字體大小</label>
+						<input type="text" placeholder="Input text" id="gif_text_size" value="20">
+					</div>
+					<div class='ui secondary menu'>
+						<a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a>
+						<a class='item' id='crop_square_button'><img src='img/paint06.png' alt=''></a>
+					</div>
+					<button class='ui button' id="add_crop_image_to_gif" onclick='add_crop_image_to_gif()'>關注區域加到 GIF
+						列表</button>
+					<button class='ui button' id="show_crop_image_gif" onclick='show_crop_image_gif()'>產製 GIF
+						動畫檔</button>
+					<button class='ui button' id="clear_crop_image_gif" onclick='clear_crop_image_gif()'>清除 GIF
+						列表</button>
+
+					<br>
+					<!--form enctype="multipart/form-data" action="" method="post" class="ui action file input">
+				<input type="text" id="upload_crop_gif_text" readonly placeholder="選擇檔案">
+				<input type="file" id="upload_crop_gif" name="upload_crop_gif" style="display:none"><br>
+				<label for="upload_crop_gif" class="ui icon button">
+					<i class="attach icon"></i>
+				</label>
+				<input type="button" name="upload_crop_gif_btn" onclick = 'upload_crop_image_gif()' value="匯入 GIF 列表">
+				
+			</form-->
+
+            <br>
+			<br>			
+		    <button class='ui button' id="get_crop_image" onclick = 'get_crop_image()'>關注區域截圖 PNG 檔下載</button>
+            <button class='ui button' id="get_crop_kml" onclick = 'get_crop_kml()'>關注區域截圖 KMZ 檔下載</button>
+           
+			<div id='treeBox_crop_gif' style='width:100%;height:200;'></div> 
+        </div>
+		<!-- 1007 -->
+		<!-- 2020 0321 -->
+		<div id ="Share_1_4" class='title'>
+			<i class='dropdown icon'></i>離線圖資產製
+		</div>	
+		<div class='content'>
+		*<a href="BigGIS截圖比例說明_離線地圖.pdf" target="_blank" title="詳細操作請參考">
+						<font color="#FF0000">匯出tiff檔位置跑掉了怎麼辦?!</font>
+			<div class='ui secondary menu'>
+                <a class='item' data-tab='one'><img src='img/paint01.png' alt=''></a> 
+				<a class='item' id = 'crop_square_button_GeoTiff'><img src='img/paint06.png' alt='擷取框選範圍'></a>
+				<a class='item' id = 'full_screen_image_button'><img src='img/paint07.jpeg' alt='擷取視窗範圍' onclick='get_full_screen_image()'></a>
+            </div>
+			<button class='ui button' id="add_crop_image_to_GeoTiff" onclick='add_crop_image_to_GeoTiff()'>關注區域加到 GeoTiff 列表</button>
+			<button class='ui button' id="clear_crop_image_to_gif" onclick='clear_crop_image_Geotiff()'>清除 GeoTiff 列表</button>
+			<br>
+			<br>
+			<button class='ui button' id="get_crop_kmz" onclick='get_crop_kmz()'>關注區域截圖 KMZ 檔下載</button>
+			<br>
+			<div id='treeBox_crop_img' style='width:100%;height:200;'></div>
+			<br>
+			<div class="ui input">
+			    <label>離線圖資名稱 </label>
+                <input type="text" placeholder="Input text" id="GeoPDF_name">
+			</div>
+			<br>
+			<br>
+			<button class='ui button' id="combine_geoPDF_download" onclick = 'get_GeoPDF_combine()'>合併 GeoPDF下載</button>
+			<br>
+			<br>
+			<button class='ui button' id="Geotiff_list_download" onclick = 'get_GeoTiff_list()'>列表Geotiff打包下載</button>
+		</div>
+		<!-- 2020 0321 -->
+		<!-- 2020 1026 -->
+		<div id ="Share_1_5" class='title'>
+			<i class='dropdown icon'></i>離線圖資產製(原始畫質)
+		</div>	
+			<div id  ="geopdf_origin_content" class='content'>
+				<div class='ui secondary menu'>
+					<a class='item' data-tab='one' id='back_button_origin'><img src='img/paint01.png' alt=''></a> 
+					<a class='item' id = 'crop_square_button_GeoTiff_origin'><img src='img/paint06.png' alt=''></a>
+					<div id = 'current_layer_name'> </div>
+				</div>
+				<button class='ui button' id="add_crop_image_to_GeoTiff_origin" onclick = 'add_crop_img_to_Geotiff_origin()'>關注區域加到 GeoTiff 列表</button>
+				<button class='ui button' id="clear_crop_image_to_Geotiff_origin" onclick = 'clear_crop_image_Geotiff_origin()'>清除 GeoTiff 列表</button>
+				
+				<br>
+				<div id = 'get_GEOINFO_status'> </div>
+				<br>
+				<!-- <div class="ui input">
+					<label>離線圖資名稱 </label>
+					<input type="text" placeholder="請輸入圖資名稱" id="GeoPDF_name_origin" value="" size=40>
+				</div>
+				<br> -->
+				<br>
+				<!-- <div class="ui input">
+					<label>寄送信箱 </label>
+					<input type="text" placeholder="請輸入圖資寄送信箱" id="GeoPDF_mail_origin" value="" size=40>
+				</div> -->
+				<!-- <br>
+				<br>
+				<button class='ui button' id="combine_geoPDF_download_origin" onclick = 'get_GeoPDF_combine_origin()' disabled='true'>合併 GeoPDF下載</button>
+				<br>
+				<br>
+				<button class='ui button' id="Geotiff_list_download_origin" onclick = 'get_Geotiff_list_origin()'disabled='true'>列表Geotiff打包下載</button> -->
+			</div>
+		<!-- 2020 1026 -->
+		
+			</div>
+			</div>
+
+		</div>
+	</div>
+</body>
+
+</html>
