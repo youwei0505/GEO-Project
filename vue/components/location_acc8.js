@@ -328,6 +328,7 @@ Vue.component('load_location_8', {
 				<td align=center>
 					<!--   // 分局 所有下拉選單 類別 :   ********-->
 					<select id="column1_8" @click="onClickcolumn1_8($event)">      
+                        <option >選擇分局</option>
                         <option value="臺中分局">臺中分局</option>
                         <option value="臺北分局">臺北分局</option>
                         <option value="臺南分局">臺南分局</option>   
@@ -345,7 +346,7 @@ Vue.component('load_location_8', {
 				    </select>
 				</td>  
                 <td align=center>
-					<select id="column3_8" @click="onClickcolumn3_8($event)">
+					<select id="column3_8" @change="onClickcolumn3_8($event)">
 					    <option>選擇子集水區</option>
 				    </select>
 				</td>        
