@@ -2,7 +2,7 @@
 
 var Image_Label = ["TileImage", "TileImage_Planet", "TileImage_M", "TileImage_nlsc", "TileImage_spot", "TileImage_SINICA", "TileImage_GSW", "ImageOverlay", "3DModel", "GifOverlay", "TileImage_WMS_moeacgs"];
 var Vector_Label = ["KmlTile", "Kml", "Kml_color", "MVTTile", "JsonOverlay", "Kml_Orcolor", "MVTTile_Orcolor", , "Kml_Pos"];
-var Dot_Label = ["Document"];
+var Dot_Label = ["Document", "DB_Point"];
 var Orcolor_Label = ["Kml_Orcolor", "MVTTile_Orcolor"];
 var Fill_Label = ["Kml_color", "MVTTile", "JsonOverlay"];
 
@@ -36,7 +36,14 @@ function Layer_Grid_Oncheck(root_name, row_id, cellInd, state) {
 
 			url: url_accesslog + layer_content.ID + '?uid=1312&client_id=6',
 			success: function (data) {
-				// console.log(layer_content.ID + ':' + data.result);
+				console.log(layer_content.ID + '_unlogin:' + data.result);
+			}
+		})
+		$.ajax({
+
+			url: url_accesslog + layer_content.ID + '?uid=1312&client_id=6',
+			success: function (data) {
+				console.log(layer_content.ID + ':' + data.result);
 			}
 		})
 	} else {
@@ -112,6 +119,9 @@ function Layer_Grid_Oncheck(root_name, row_id, cellInd, state) {
 			MapOverlay2(state, layer_content, map_ind);
 			break;
 		case "Document":
+			DocsFeatureOverlay(root_name, state, row_id, map_ind);
+			break;
+		case "DB_Point":
 			DocsFeatureOverlay(root_name, state, row_id, map_ind);
 			break;
 		case "Thumbnail":
@@ -341,9 +351,6 @@ function search_Icon_draw_Polygon(lat, lng, data) {
 
 	var list = [[23.1, 121], [23.21, 121.8], [24.1, 121.9], [23.1, 121]];
 
-	//避免被更新值
-	// const input_list = [[120.9070194429354, 24.715836498701094], [120.90617190364335, 24.71587868135399], [120.90582595647588, 24.715895891814164], [120.90560402278388, 24.715906948843003], [120.90447527275037, 24.715856571884192], [120.90279542303071, 24.716169182062764], [120.90126720991326, 24.716380379664994], [120.90037211966013, 24.716745397628717], [120.89891213786838, 24.71725901887082], [120.8971078118375, 24.718099803719923], [120.89534447045652, 24.71903983079122], [120.8946141150051, 24.719605837718536], [120.89340177762519, 24.72030703376524], [120.89253450887057, 24.720306324630595], [120.89172295515235, 24.71980243011385], [120.89114573231852, 24.719111247317933], [120.89091318778524, 24.71800504128463], [120.89088667399079, 24.717275789988054], [120.89070955577925, 24.716004833386307], [120.89020127864595, 24.71518737160152], [120.88951336798748, 24.71495886889487], [120.88810946762547, 24.71482012692782], [120.8868981255666, 24.714792039439946], [120.88583868847077, 24.71438941940317], [120.88493118110317, 24.71377254508912], [120.8837349098084, 24.712803196283506], [120.88218072779296, 24.711858388919556], [120.88006221393965, 24.71093803642414], [120.87925057059383, 24.710558141296136], [120.87742114665703, 24.70960177597302], [120.8765545447939, 24.709248910205968], [120.87509528881303, 24.709270277067812], [120.87257647161674, 24.70918002983074], [120.87070453885357, 24.70911522201087], [120.87024312095052, 24.70909667416702], [120.87014713918511, 24.709593219419908], [120.87031616695499, 24.71051429664061], [120.87055897822808, 24.7110427395324], [120.87139620918187, 24.711729709666788], [120.87224522453131, 24.712222549686896], [120.87353851089372, 24.713101685236364], [120.87452693696629, 24.71369621182624], [120.87490746060297, 24.713994506961036], [120.87518723900814, 24.71435141030365], [120.8746623147012, 24.71544798027503], [120.8739425184078, 24.715496950220526], [120.87308295495352, 24.715408186513407], [120.87291043848411, 24.715406595870228], [120.87227442891563, 24.71540072787954], [120.87118782822127, 24.71537045279538], [120.87022810825674, 24.71547789075819], [120.86957367153722, 24.7159423487815], [120.86937550506283, 24.716691543055372], [120.86963391353837, 24.71782949895173], [120.87008327902115, 24.719200042147204], [120.87100096055428, 24.72074932135387], [120.8719698306753, 24.72241602328587], [120.87320532653436, 24.724344802845092], [120.87433571607869, 24.72550371041403], [120.87579797496485, 24.72724755060088], [120.87664601249827, 24.72802913092015], [120.8767877304509, 24.727775606020025], [120.8771761506391, 24.72747117538119], [120.87768210873915, 24.72753931047518], [120.878029812484, 24.72767955294815], [120.87842828529294, 24.727851438933424], [120.87885863778725, 24.728025606789974], [120.87929601059272, 24.72819300663541], [120.87990505100471, 24.72833119680424], [120.88038737420062, 24.72839244203786], [120.88093225708081, 24.72843350841352], [120.88148926810732, 24.72841137608989], [120.88189330973357, 24.728391378473283], [120.88237256576114, 24.728421101139997], [120.88276301318884, 24.728464297726322], [120.88314965157677, 24.728482657795976], [120.88359084192255, 24.72849880295396], [120.88402355239626, 24.728426901414224], [120.88446197628255, 24.728348320885633], [120.88497620327988, 24.728299053831627], [120.88542178578128, 24.728326483747896], [120.88595571012547, 24.728403551623526], [120.88643365530886, 24.728530328766407], [120.88692393290741, 24.72863679730736], [120.88735746133686, 24.72865066753104], [120.88778539662746, 24.728718710832382], [120.88833889088077, 24.728800390410022], [120.88876061208518, 24.728888741779052], [120.88920729932799, 24.72896130928366], [120.88963479518524, 24.728975169372575], [120.89021314851362, 24.728977851083936], [120.89077231929637, 24.728910536948796], [120.89109805511548, 24.728736954230055], [120.89139822838555, 24.72851594709648], [120.89173582308528, 24.72820475972274], [120.89201601945852, 24.727791858047805], [120.89222084885569, 24.72740607987291], [120.89231878612209, 24.72701562004303], [120.89229656348236, 24.72649874968797], [120.89219910791373, 24.72604719936818], [120.89207043395486, 24.725584430000758], [120.89203613166961, 24.72517807299537], [120.89201469902244, 24.724787526363944], [120.89204363923535, 24.72441516638313], [120.89217939739993, 24.724036020487755], [120.89240927482965, 24.723623171924505], [120.89268952328489, 24.72323058423622], [120.89292583560403, 24.72282225378597], [120.89318138055283, 24.722517686420453], [120.89347549577353, 24.722303443015434], [120.89396521575458, 24.72217963264515], [120.8943548103763, 24.722152818729597], [120.89483252227335, 24.722150896366752], [120.89525389974439, 24.722142161619796], [120.89571868161543, 24.722099595505952], [120.8962535912529, 24.721948810515602], [120.89669051144796, 24.72177754946183], [120.8971789331339, 24.721540857976695], [120.89751656535529, 24.72134243756613], [120.89784786243742, 24.721112498262563], [120.89817894361269, 24.72084635023184], [120.89849016740862, 24.72043119893609], [120.89870112034704, 24.720097336102913], [120.89895004728126, 24.71978598184114], [120.8992495964346, 24.71948594885644], [120.8995931571884, 24.719204094243292], [120.89989932509528, 24.718983072825544], [120.90032466210347, 24.718698923593884], [120.90083736743344, 24.71835171298646], [120.90130641266413, 24.71805178776718], [120.90163180251237, 24.717848835548814], [120.90206975027789, 24.717587263169964], [120.90239527782103, 24.717413745688535], [120.9027142323757, 24.717199499208647], [120.90299521340658, 24.716958138633704], [120.90354010341204, 24.716723719890503], [120.90402931447954, 24.716584165293046], [120.90446829797801, 24.7164490011891], [120.90492012671515, 24.716361249218348], [120.9053217283687, 24.716277979454716], [120.90573573600113, 24.716176656265727], [120.90610602739476, 24.716095621899775], [120.90649490834627, 24.716012341026342], [120.90684590291218, 24.715895174316785], [120.9070194429354, 24.715836498701094]];
-
 	// 設定畫完圖後的定位位置
 	lng = input_list[0][0];
 	lat = input_list[0][1];
@@ -412,11 +419,11 @@ function search_Icon_draw2(lat, lng, newlist,) {
 	}
 
 	console.log("newlist : ", newlist)
-	console.log("newlist[1].x : ", newlist[1].x, "newlist[1].y : ", newlist[1].y,)
+	// console.log("newlist[1].x : ", newlist[1].x, "newlist[1].y : ", newlist[1].y,)
 
 	let locate_icons = [];
 
-	for (let i = 1; i < newlist.length; i++) {
+	for (let i = 0; i < newlist.length; i++) {
 		var lat = newlist[i].y
 		var lng = newlist[i].x
 		console.log("lat : ", newlist[i].y, "lng : ", newlist[i].x)
@@ -454,7 +461,7 @@ function search_Icon_draw3(lat, lng, newlist,) {
 	}
 
 	console.log("newlist : ", newlist)
-	console.log("newlist[1].x : ", newlist[1].x, "newlist[1].y : ", newlist[1].y,)
+	// console.log("newlist[1].x : ", newlist[1].x, "newlist[1].y : ", newlist[1].y,)
 
 	let locate_icons = [];
 
@@ -486,19 +493,68 @@ function search_Icon_draw3(lat, lng, newlist,) {
 	maps[map_ind].addLayer(Location_Icon_vectorLayer);
 	// Locate(lat, lng, 16);
 }
+//批次地址/地點定位 icon清除 delete_one
+function search_Icon_draw_delete_one() {
+	console.log("search_Icon_draw_delete_one")
+	console.log("vectorSource.clear()")
+	vectorSource.clear();
+	console.log("Location_Icon_vectorLayer.clear()")
+	console.log("removeLayer")
+	maps[map_ind].removeLayer(Location_Icon_vectorLayer);
+}
+//查詢批次定位ICON youwei
+// 此功能會將定位的newlist塞入畫面feature，且會將畫面定位在最後一個位置
+function search_Icon_draw2_delete_one(newlist,) {
+	console.log("* * search_Icon_draw2_delete_one  * * ")
+	console.log("search_Icon_draw2_delete_one newlist", newlist)
+	vectorSource.clear();
+	maps[map_ind].removeLayer(Location_Icon_vectorLayer);
+	// if (Location_Icon_vectorLayer != null) {
+	// 	maps[map_ind].removeLayer(Location_Icon_vectorLayer);
+	// }
+
+	console.log("newlist : ", newlist)
+	// console.log("newlist[1].x : ", newlist[1].x, "newlist[1].y : ", newlist[1].y, "title : ", newlist[1].title)
+
+	let locate_icons = [];
+
+	for (let i = 0; i < newlist.length; i++) {
+		var lat = newlist[i].y
+		var lng = newlist[i].x
+		console.log("lat : ", newlist[i].y, "lng : ", newlist[i].x, "title : ", newlist[i].title)
+		var locate_icon = new ol.Feature({
+			geometry: new ol.geom.Point(ol.proj.fromLonLat([parseFloat(lng), parseFloat(lat)])),
+			name: '定位點'
+		});
+		locate_icon.setStyle(new ol.style.Style({
+			image: new ol.style.Icon(/** @type {olx.style.IconOptions} */({
+				crossOrigin: 'anonymous',
+				src: '/map/img/Search_Icon_Location.png'
+			}))
+		}));
+		locate_icons.push(locate_icon)
+	}
+
+	vectorSource = new ol.source.Vector({
+		features: locate_icons
+	});
+	Location_Icon_vectorLayer = new ol.layer.Vector({
+		source: vectorSource
+	});
+	Location_Icon_vectorLayer.setZIndex(2000);
+	console.log("* * map_ind in tool_fun search_Icon_draw2 :", map_ind)
+	maps[map_ind].addLayer(Location_Icon_vectorLayer);
+	console.log("* * search_Icon_draw2_delete_one  * * ")
+}
 //批次地址/地點定位 icon清除
 function search_Icon_draw_clear(length) {
 	console.log("search_Icon_draw_clear")
-	console.log("map in tool_fun, length:", maps[map_ind])
-	console.log("in tool_fun, length:", length)
-	// console.log("locate_icons :", locate_icons)	
-	// for ( let i = 0; i < length;i++ ){	
-	// 	console.log("locate_icons :", locate_icons)	
-	// 	locate_icons.pop();
-	// }
+	console.log("vectorSource", vectorSource)
+	console.log("vectorSource.features", vectorSource.features)
+	console.log("vectorSource.clear()")
 	vectorSource.clear();
+	console.log("removeLayer")
 	maps[map_ind].removeLayer(Location_Icon_vectorLayer);
-
 }
 //批次地址/地點定位，單純只有定位功能，location_acc6
 function search_Icon_locate(lat, lng) {
@@ -744,8 +800,11 @@ function jsto84(loc) {
 
 //文件點擊呈現
 function Docs_icon_click(id, name) {
-	Docs_info_w1.show();
-	Docs_info_w1.setModal(false);
+	if (id.indexOf("d3_") != 0) {
+		Docs_info_w1.show();
+		Docs_info_w1.setModal(false);
+	}
+
 
 	swcb_photo_link = id.indexOf("swcb.gov.tw/");
 

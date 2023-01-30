@@ -8,20 +8,30 @@ Vue.component("button-counter", {
       <table id="location_68" class="table table-bordered" style="font-size: 0.6rem;">
       <thead>
       
-      <button class="btn btn-warning" @click="kml_output"  style="width: 100%;"  variant="primary" >KML</button>
+      <button class="btn btn-info" @click="kml_output"  style="width: 100%;"  variant="primary" >批次點位匯出</button>
       <br>
-      <button class="btn btn-warning" @click="clear"  style="width: 100%;"  variant="info" >清除</button>
-      
+      <br>
+      <button class="btn btn-warning" @click="clear_all"  style="width: 100%;"  variant="info" >清除</button>
+      <br>
+      <br>
+      <li>
+        <tr>
+          <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">刪除定位</td>
+          <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">點擊定位</td>
+          <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">標題</td>
+          <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">說明</td>
+        </tr>
+      </li>
       <li v-for="item in newlist" :key="item.name">
       <tr>
         <td style="width: 69.29px; text-align: center; padding: 0.5rem 0px;">
-        <button class="btn btn-default btn-circle gfLocateCsv_locateOne" data-x="120.4444" data-y="23.55555" data-title="test2" data-descript="<p>desc111</p>" data-srs="EPSG:4326"
-        @click=onButtonClick_Search_Icon_locate(item.y,item.x,item.type,newlist) > {{item.name}}
-            <i class="mdi mdi-map-marker" title="定位"></i>
-        </button>
+        <button  @click=delete_one(item.name,newlist) > {{item.delete}}</button>
         </td>
-        <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px;">{{item.title}}</td>
-        <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px;">{{item.desc}}</td>
+        <td style="width: 69.29px; text-align: center; padding: 0.5rem 0px;">
+        <button  @click=onButtonClick_Search_Icon_locate(item.y,item.x,item.type,newlist) > {{item.name}}</button>
+        </td>
+        <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">{{item.title}}</td>
+        <td style=" width: 69.29px; text-align: center; padding: 0.5rem 0px; font-size: 15px;">{{item.desc}}</td>
       </tr>
       </li>
       </thead>
@@ -34,7 +44,7 @@ Vue.component("button-counter", {
     onButtonClick_Search_Icon_locate: function (y, x, type, newlist) {
       // 檢查用
       // console.log('onButtonClick_Search_Icon_locate onButtonClick')
-      // console.log("newlist ", newlist)
+      console.log("newlist ", newlist)
       // console.log("type ", type)
       // console.log("y ", y)
       // console.log("x ", x)
@@ -50,26 +60,67 @@ Vue.component("button-counter", {
       }
       else if (type == 67) {
         console.log("type ", 67)
-        twd67locexe2(y, x);
+        // twd67locexe2(y, x);
+        search_Icon_draw2(y, x, newlist)
+        search_Icon_locate(y, x)
       }
       else {
         console.log("onButtonClick_Search_Icon_locate error !")
       }
       console.log('onButtonClick_Search_Icon_locate Click !')
     },
-    clear: function () {
+    clear_all: function () {
       console.log("  clear function : in append !")
       console.log(" $list in append", $list)
+      console.log(" $list.length in append", $list.length)
       console.log(" this.newlist in append", this.newlist)
+      console.log(" this.newlist.length in append", this.newlist.length)
       var new_list = []
       var length = $list.length
-      for (let i = $list.length; i > 1; i--) {
+      for (let i = length; i > 0; i--) {
         $list.pop();
-        search_Icon_draw_clear(i - 2)
+        console.log(" $list.length in append", $list.length)
+        // search_Icon_draw_clear(i)
       }
+      // $list = []
+      // $list.push({
+      //   name: "test",
+      //   title: "test",
+      //   desc: "test",
+      //   x: "test",
+      //   y: "test",
+      //   type: "test",
+      //   number: "test",
+      //   delete: "刪除",
+      // })
       this.newlist = $list
+      search_Icon_draw_clear(i)
       console.log("$list in append", $list)
       console.log("this.newlist length in append", length)
+    },
+    delete_one: function (item_name, newlist) {
+      console.log("delete_one: function ")
+      console.log("item_name ", item_name)
+      console.log("$list ", $list, typeof $list)
+      console.log("newlist ", newlist, typeof newlist)
+
+      delete_list = JSON.parse(JSON.stringify(newlist))
+
+      console.log("delete_list 1", delete_list, typeof delete_list)
+
+      var delete_list = delete_list.filter(function (item) {
+        return item.name !== item_name
+      });
+      console.log("delete_list 2", delete_list, typeof delete_list)
+
+      search_Icon_draw2_delete_one(delete_list)
+
+      console.log("this.newlist ", this.newlist, typeof this.newlist)
+      console.log("delete_list 3", delete_list, typeof delete_list)
+
+      this.newlist = delete_list
+      // this.newlist = $list
+      console.log("delete_one: function ")
     },
     kml_output: function () {
       // Function:
@@ -118,7 +169,7 @@ Vue.component("button-counter", {
       kml_text = kml_text + " \t </Folder> \n" + "</Document> \n"
 
       // 下載的kml檔案的名稱
-      var kml_file = "Data0000.kml"
+      var kml_file = "BigGIS__批次定位__KML匯出檔.kml"
 
       //下載的過程
       let element = document.createElement('a')
@@ -200,7 +251,7 @@ Vue.component('load_location_6', {
         reader.onload = e => {
           resolve((vm.fileinput = reader.result));
         };
-        reader.readAsText(file);
+        reader.readAsText(file, "BIG5");
 
       });
 
@@ -258,6 +309,7 @@ Vue.component('load_location_6', {
             y: this.cells[0],
             type: 84,
             number: 20,
+            delete: "刪除",
           })
 
           console.log("this.cells[0]", this.cells[0])
@@ -293,8 +345,6 @@ Vue.component('load_location_6', {
           var itemloc84 = jsto84(itemloc);
           console.log("itemloc84", itemloc84)
 
-
-
           $list.push({
             name: type + i,
             title: this.cells[2],
@@ -303,9 +353,14 @@ Vue.component('load_location_6', {
             y: itemloc84[0],
             type: 97,
             number: 20,
+            delete: "刪除",
           })
 
-
+          console.log("this.cells[0]", this.cells[0])
+          console.log("this.cells[1]", this.cells[1])
+          console.log("itemloc84[1]", itemloc84[1])
+          console.log("itemloc84[0]", itemloc84[0])
+          console.log(" i  ", i)
           // this.insert()            
         }
 
@@ -328,7 +383,6 @@ Vue.component('load_location_6', {
           console.log("this.cells[1]", this.cells[1])
           console.log("this.cells[2]", this.cells[2])
           console.log("this.cells[3]", this.cells[3])
-
 
           // 轉換
           // var itemloc = [twd67x, twd67y];
@@ -354,15 +408,16 @@ Vue.component('load_location_6', {
             desc: this.cells[3],
             x: itemloc84[1],
             y: itemloc84[0],
-            type: 97,
+            type: 67,
             number: 20,
+            delete: "刪除",
           })
 
 
           // this.insert()            
         }
 
-        this.output_kml()
+        // this.output_kml()
         // twd67locexe2(this.TWD67Y,this.TWD67X);
 
       }
@@ -410,74 +465,6 @@ Vue.component('load_location_6', {
       download("vue/components/sample_97.txt");
       // window.open("vue/components/sample_97.txt","_self")
     },
-
-    // onButtonClick_WGS84_okey: function (number) {
-
-    //   console.log('onButtonClick_WGS84_okey onButtonClick')
-    //   console.log("number", number)
-    //   var i = number
-    //   console.log("fileinput",this.fileinput) 
-    //   console.log("data_list",this.data_list) 
-    //   var data_rows = this.data_list 
-    //   console.log("rows[",i,"]",data_rows[i]) 
-    //   var cells = data_rows[i].split(",")
-    //   console.log(cells)
-    //   this.WGS84Y1 = cells[0]
-    //   this.WGS84X1 = cells[1]
-    //   console.log("this.WGS84Y1", this.WGS84Y1)
-    //   console.log("this.WGS84X1", this.WGS84X1)
-    //   search_Icon_draw2(this.WGS84X1,this.WGS84Y1)           
-    //   },
-    // onButtonClick_WGS84_okey2: function (number) {
-    //   console.log('onButtonClick_WGS84_okey2 onButtonClick')
-    //   console.log("number", number)
-    //   var i = number
-    //   console.log("fileinput",this.fileinput) 
-    //   console.log("data_list",this.data_list) 
-    //   var data_rows = this.data_list 
-    //   console.log("rows[",i,"]",data_rows[i]) 
-    //   var cells = data_rows[i].split(",")
-    //   console.log(cells)
-    //   this.WGS84Y1 = cells[0]
-    //   this.WGS84X1 = cells[1]
-    //   console.log("this.WGS84Y1", this.WGS84Y1)
-    //   console.log("this.WGS84X1", this.WGS84X1)
-    //   search_Icon_draw2(this.WGS84X1,this.WGS84Y1)     
-    // },
-    // updatetext: function(i) {
-    //   console.log("updatetext")
-    //   console.log(i)
-    //   this.$set(this.text, 'text1', this.texts1_x)
-    //   this.$set(this.text, 'text2', this.texts1_y)
-
-    //   $("#location_6").append(`
-    //   <tr>
-    //   <td id="location_6_append" style="width: 50px; text-align: center; padding: 0.5rem 0px;">
-    //   <button class="btn btn-default btn-circle gfLocateCsv_locateOne" data-x="120.4444" data-y="23.55555" data-title="test2" data-descript="<p>desc111</p>" data-srs="EPSG:4326"
-    //   @click=onButtonClick_WGS84_okey(1) > test1
-    //       <i class="mdi mdi-map-marker" title="定位"></i>
-    //   </button>
-    //   </td>
-    //   <td style="text-align: center; padding: 0.5rem 0px;">{{text2.text1}}</td>
-    //   <td style="text-align: center; padding: 0.5rem 0px;">{{text2.text2}}</td>
-    //   </tr>
-    //   `);
-
-    //   $( "#location_6_append" ).on( "click", function() {
-
-    //     console.log("location_6_append")
-    //   });
-
-
-    // },    
-    // useless
-    // addNewList: function(){
-    //   this.lists.push({
-    //     id:this.nextTodoId++,
-    //     title:this.newAddText
-    //   })
-    //   this.newAddText=''
-    // },      
     clear: function () {
       console.log("  clear \n\n\n")
     },
@@ -497,21 +484,23 @@ Vue.component('load_location_6', {
       console.log("$list in outside", $list)
     }
     clear()
-    $list.unshift({
-      name: "點擊定位",
-      title: "標題",
-      desc: "說明",
-      x: '',
-      y: '',
-      type: 0,
-      number: 56,
-    })
+
+    // $list.unshift({
+    //   delete: "刪除點位",
+    //   name: "點擊定位",
+    //   title: "標題",
+    //   desc: "說明",
+    //   x: '',
+    //   y: '',
+    //   type: 0,
+    //   number: 56,
+    // })
 
   },
   template:
     `
     <div id="containerLocateBatch"
-        style="width: 200px; background: transparent; overflow: hidden; height: 1200px; padding: 0px; margin: 0px;">
+        style="width: 275px; background: transparent; overflow: hidden; height: 1200px; padding: 0px; margin: 0px;">
         
         <div class="gfLocateCsv_uploadContainer" style="height: 250px; ">
           <form enctype="multipart/form-data">
